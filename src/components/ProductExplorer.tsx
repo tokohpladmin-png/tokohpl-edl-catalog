@@ -1,111 +1,209 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import type { Product } from '@/types/product';
+import { searchProducts } from '@/lib/products';
 import { ProductGrid } from './ProductGrid';
+
+const PRODUCTS_PER_PAGE = 24;
+
+function optionLabel(value: string) {
+  return value || 'All';
+}
+
+type FilterOptions = {
+  collections: string[];
+  categories: string[];
+  finishes: string[];
+  sizes: string[];
+  colorFamilies: string[];
+};
 
 type ProductExplorerProps = {
   products: Product[];
-  filterOptions?: {
-    collections?: string[];
-    categories?: string[];
-    finishes?: string[];
-    sizes?: string[];
-    colorFamilies?: string[];
-  };
+  filterOptions: FilterOptions;
+  showCollectionTabs?: boolean;
+  showPromoPricing?: boolean;
 };
 
-function uniqueSorted(values: Array<string | null | undefined>) {
-  return Array.from(new Set(values.filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b));
-}
+export function ProductExplorer({ products, filterOptions, showCollectionTabs = true, showPromoPricing = false }: ProductExplorerProps) {
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get('search') || '');
+  const [collection, setCollection] = useState('');
+  const [category, setCategory] = useState('');
+  const [finish, setFinish] = useState('');
+  const [size, setSize] = useState('');
+  const [page, setPage] = useState(1);
 
-export function ProductExplorer({ products, filterOptions }: ProductExplorerProps) {
-  const [search, setSearch] = useState('');
-  const [sizeMm, setSizeMm] = useState('All');
-  const [category, setCategory] = useState('All');
-  const [collection, setCollection] = useState('All');
+  useEffect(() => {
+    setQuery(searchParams.get('search') || '');
+    setPage(1);
+  }, [searchParams]);
 
-  const sizeOptions = useMemo(() => uniqueSorted(filterOptions?.sizes?.length ? filterOptions.sizes : products.map((product) => product.sizeMm)), [filterOptions?.sizes, products]);
-  const categoryOptions = useMemo(() => uniqueSorted(filterOptions?.colorFamilies?.length ? filterOptions.colorFamilies : products.map((product) => product.colorFamily)), [filterOptions?.colorFamilies, products]);
-  const collectionOptions = useMemo(() => uniqueSorted(filterOptions?.collections?.length ? filterOptions.collections : products.map((product) => product.collection)), [filterOptions?.collections, products]);
+  useEffect(() => {
+    setPage(1);
+  }, [query, collection, category, finish, size]);
 
   const filteredProducts = useMemo(() => {
-    const query = search.trim().toLowerCase();
+    let result = searchProducts(products, query);
 
-    return products.filter((product) => {
-      const haystack = [
-        product.code,
-        product.name,
-        product.design,
-        product.designName,
-        product.collection,
-        product.colorFamily,
-        product.sizeMm
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
+    if (collection === '__promo-items') result = result.filter((product) => product.isPromoItem);
+    else if (collection) result = result.filter((product) => product.collection === collection);
+    if (category) result = result.filter((product) => product.category === category);
+    if (finish) result = result.filter((product) => product.finish === finish);
+    if (size) result = result.filter((product) => product.size === size);
 
-      const matchesSearch = !query || haystack.includes(query);
-      const matchesSize = sizeMm === 'All' || product.sizeMm === sizeMm;
-      const matchesCategory = category === 'All' || product.colorFamily === category;
-      const matchesCollection = collection === 'All' || product.collection === collection;
+    return result;
+  }, [products, query, collection, category, finish, size]);
 
-      return matchesSearch && matchesSize && matchesCategory && matchesCollection;
-    });
-  }, [products, search, sizeMm, category, collection]);
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
+  const safePage = Math.min(page, totalPages);
+  const startIndex = (safePage - 1) * PRODUCTS_PER_PAGE;
+  const endIndex = startIndex + PRODUCTS_PER_PAGE;
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+
+  const clearFilters = () => {
+    setQuery('');
+    setCollection('');
+    setCategory('');
+    setFinish('');
+    setSize('');
+    setPage(1);
+  };
+
+  const goToPage = (nextPage: number) => {
+    setPage(Math.min(Math.max(nextPage, 1), totalPages));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
-    <div>
-      <div className="mb-8 rounded-[2rem] border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
-        <div className="grid gap-3 lg:grid-cols-[1.4fr_0.9fr_0.9fr_0.9fr]">
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search code, design, collection..."
-            className="rounded-2xl border border-stone-200 bg-[#fbfaf7] px-4 py-3 text-sm font-semibold text-[#17130f] outline-none focus:border-[#17130f]"
-          />
+    <div className="space-y-8">
+      {showCollectionTabs && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {[
+            ['Shop', '/products'],
+            ['Solid', '/collections/solid'],
+            ['Wood', '/collections/wood'],
+            ['Marble | Stone', '/collections/marble-stone'],
+            ['Pattern | Metal', '/collections/pattern-metal'],
+            ['Aptico', '/collections/aptico'],
+            ['Promo Items', '/collections/promo-items']
+          ].map(([label, href]) => (
+            <Link key={href} href={href} className="shrink-0 rounded-full border border-stone-200 bg-white px-5 py-2.5 text-xs font-black uppercase tracking-[0.14em] text-stone-700 transition hover:border-stone-950 hover:text-stone-950">
+              {label}
+            </Link>
+          ))}
+        </div>
+      )}
 
-          <select
-            value={collection}
-            onChange={(event) => setCollection(event.target.value)}
-            className="rounded-2xl border border-stone-200 bg-[#fbfaf7] px-4 py-3 text-sm font-bold text-[#17130f] outline-none focus:border-[#17130f]"
-          >
-            <option value="All">All Collections</option>
-            {collectionOptions.map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
+      <div className="soft-card p-4 sm:p-5">
+        <div className="grid gap-4 lg:grid-cols-[1.55fr_1fr_1fr_1fr_1fr]">
+          <label className="block">
+            <span className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Search</span>
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search products"
+              className="h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition placeholder:text-stone-400 focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5"
+            />
+          </label>
 
-          <select
-            value={sizeMm}
-            onChange={(event) => setSizeMm(event.target.value)}
-            className="rounded-2xl border border-stone-200 bg-[#fbfaf7] px-4 py-3 text-sm font-bold text-[#17130f] outline-none focus:border-[#17130f]"
-          >
-            <option value="All">All Sizes</option>
-            {sizeOptions.map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
+          <label className="block">
+            <span className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Collection</span>
+            <select value={collection} onChange={(event) => setCollection(event.target.value)} className="h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
+              <option value="">All collections</option>
+              <option value="__promo-items">Promo Items</option>
+              {filterOptions.collections.map((item) => <option key={item} value={item}>{optionLabel(item)}</option>)}
+            </select>
+          </label>
 
-          <select
-            value={category}
-            onChange={(event) => setCategory(event.target.value)}
-            className="rounded-2xl border border-stone-200 bg-[#fbfaf7] px-4 py-3 text-sm font-bold text-[#17130f] outline-none focus:border-[#17130f]"
-          >
-            <option value="All">All Categories</option>
-            {categoryOptions.map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
+          <label className="block">
+            <span className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Finish</span>
+            <select value={finish} onChange={(event) => setFinish(event.target.value)} className="h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
+              <option value="">All finishes</option>
+              {filterOptions.finishes.map((item) => <option key={item} value={item}>{optionLabel(item)}</option>)}
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Category</span>
+            <select value={category} onChange={(event) => setCategory(event.target.value)} className="h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
+              <option value="">All categories</option>
+              {filterOptions.categories.map((item) => <option key={item} value={item}>{optionLabel(item)}</option>)}
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Size</span>
+            <select value={size} onChange={(event) => setSize(event.target.value)} className="h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
+              <option value="">All sizes</option>
+              {filterOptions.sizes.map((item) => <option key={item} value={item}>{optionLabel(item)}</option>)}
+            </select>
+          </label>
         </div>
 
-        <p className="mt-4 text-sm font-bold text-stone-500">
-          Showing {filteredProducts.length} of {products.length} products
-        </p>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-stone-500">
+          <p>
+            <span className="font-bold text-stone-950">{filteredProducts.length}</span> product{filteredProducts.length === 1 ? '' : 's'} found
+            {filteredProducts.length > 0 && (
+              <span> · Showing <span className="font-bold text-stone-950">{startIndex + 1}-{Math.min(endIndex, filteredProducts.length)}</span></span>
+            )}
+          </p>
+          <button type="button" onClick={clearFilters} className="font-bold text-stone-950 hover:underline">
+            Clear filters
+          </button>
+        </div>
       </div>
 
-      <ProductGrid products={filteredProducts} />
+      <ProductGrid products={paginatedProducts} showPromoPricing={showPromoPricing || collection === '__promo-items'} />
+
+      {filteredProducts.length > PRODUCTS_PER_PAGE && (
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+          <button
+            type="button"
+            onClick={() => goToPage(safePage - 1)}
+            disabled={safePage === 1}
+            className="rounded-full border border-stone-200 bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-700 transition hover:border-stone-950 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Previous
+          </button>
+
+          {Array.from({ length: totalPages }, (_, index) => index + 1)
+            .filter((pageNumber) => pageNumber === 1 || pageNumber === totalPages || Math.abs(pageNumber - safePage) <= 2)
+            .map((pageNumber, index, visiblePages) => {
+              const previousPage = visiblePages[index - 1];
+              const showGap = previousPage && pageNumber - previousPage > 1;
+
+              return (
+                <span key={pageNumber} className="flex items-center gap-2">
+                  {showGap && <span className="px-1 text-sm font-bold text-stone-400">…</span>}
+                  <button
+                    type="button"
+                    onClick={() => goToPage(pageNumber)}
+                    className={`h-11 min-w-11 rounded-full border px-4 text-sm font-black transition ${
+                      pageNumber === safePage
+                        ? 'border-stone-950 bg-stone-950 text-white'
+                        : 'border-stone-200 bg-white text-stone-700 hover:border-stone-950'
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                </span>
+              );
+            })}
+
+          <button
+            type="button"
+            onClick={() => goToPage(safePage + 1)}
+            disabled={safePage === totalPages}
+            className="rounded-full border border-stone-200 bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-700 transition hover:border-stone-950 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -39,7 +39,7 @@ export default function ContactPage() {
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#8a4f2b]">TokoHPL</p>
               <h2 className="mt-4 text-2xl font-black text-[#241f1a]">Need assistance?</h2>
               <p className="mt-4 text-sm leading-7 text-neutral-700">
-                Chat with our team for EDL product enquiries, pricing, stock checks, online store information, and delivery guidance.
+                Chat with our team for EDL product enquiries, pricing, stock checks, catalog information, and delivery guidance.
               </p>
               <a href="https://wa.me/628161345224" target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex rounded-full bg-[#241f1a] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#3a332c]">
                 Chat with Us

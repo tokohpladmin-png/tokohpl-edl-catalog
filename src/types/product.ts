@@ -9,9 +9,6 @@ export type Product = {
   collection?: string;
   category?: string;
   design?: string;
-  productType?: string;
-  designName?: string;
-  sizeMm?: string;
   finish?: string;
   size?: string;
   thickness?: string;
@@ -31,7 +28,7 @@ export type Product = {
   unit?: string;
   currency: 'IDR';
   active: boolean;
-  imageUrl?: string | null;
+  imageUrl?: string;
   imageUrlCandidates?: string[];
   description?: string;
   badges?: ProductBadge[];

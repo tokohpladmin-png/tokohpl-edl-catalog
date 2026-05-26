@@ -1,133 +1,152 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { useCart } from './CartProvider';
+import { useRouter } from 'next/navigation';
+import { FormEvent, useState } from 'react';
 
-const collectionLinks = [
-  { label: 'Solid', href: '/collections/solid' },
-  { label: 'Wood', href: '/collections/wood' },
-  { label: 'Marble | Stone', href: '/collections/marble-stone' },
-  { label: 'Pattern | Metal', href: '/collections/pattern-metal' },
-  { label: 'Aptico', href: '/collections/aptico' }
+const primaryNavItems = [
+  { href: '/products', label: 'SHOP' },
+  { href: '/collections/solid', label: 'SOLID' },
+  { href: '/collections/wood', label: 'WOOD' },
+  { href: '/collections/marble-stone', label: 'MARBLE | STONE' },
+  { href: '/collections/pattern-metal', label: 'PATTERN | METAL' },
+  { href: '/collections/aptico', label: 'APTICO' }
 ];
 
-function AccountIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M20 21a8 8 0 0 0-16 0" strokeLinecap="round" />
-      <circle cx="12" cy="8" r="4" />
-    </svg>
-  );
-}
+const secondaryNavItems = [
+  { href: '/', label: 'HOME' },
+  { href: '/about', label: 'ABOUT' },
+  { href: '/contact', label: 'CONTACT' }
+];
 
-function CartIcon() {
+function HeaderSearch({ onSearch }: { onSearch?: () => void }) {
+  const router = useRouter();
+  const [search, setSearch] = useState('');
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const query = search.trim();
+
+    router.push(query ? `/products?search=${encodeURIComponent(query)}` : '/products');
+    onSearch?.();
+  };
+
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M6 7h15l-1.5 9h-12L6 7Z" strokeLinejoin="round" />
-      <path d="M6 7 5.4 4H3" strokeLinecap="round" />
-      <circle cx="9" cy="20" r="1" fill="currentColor" stroke="none" />
-      <circle cx="18" cy="20" r="1" fill="currentColor" stroke="none" />
-    </svg>
+    <form onSubmit={handleSubmit} className="relative z-50 w-full pointer-events-auto">
+      <input
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+        placeholder="Search product code or design"
+        aria-label="Search products"
+        className="h-11 w-full rounded-full border border-stone-200 bg-white px-4 pr-12 text-sm font-semibold text-stone-950 outline-none transition placeholder:text-stone-400 focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5"
+      />
+      <button
+        type="submit"
+        aria-label="Submit search"
+        className="absolute right-1.5 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-stone-950 text-sm font-black text-white transition hover:bg-stone-800"
+      >
+        →
+      </button>
+    </form>
   );
 }
 
 export function Header() {
-  const { itemCount, openCart } = useCart();
-  const [collectionsOpen, setCollectionsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-stone-200/80 bg-[#fbfaf7]/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
-        <Link href="/" className="group flex items-center gap-3" aria-label="TokoHPL Home">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#17130f] text-sm font-black text-white shadow-sm transition group-hover:scale-105">
-            TH
-          </div>
-          <div className="leading-none">
-            <p className="text-[1.35rem] font-black tracking-[-0.055em] text-[#17130f]">TokoHPL</p>
-            <p className="mt-1 text-[0.62rem] font-bold uppercase tracking-[0.22em] text-stone-500">EDL Surfaces</p>
-          </div>
-        </Link>
+    <header className="sticky top-0 z-50 border-b border-stone-200 bg-white shadow-sm">
+      <div className="section-shell">
+        <div className="grid gap-3 py-3 lg:grid-cols-[auto_1fr_auto] lg:items-center lg:gap-6">
+          <div className="flex items-center justify-between gap-3">
+            <Link href="/" className="flex shrink-0 items-center gap-3" onClick={() => setIsOpen(false)}>
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-950 text-sm font-black tracking-[-0.05em] text-white">
+                TH
+              </span>
+              <span>
+                <span className="block text-2xl font-black tracking-[-0.06em] text-stone-950">TokoHPL</span>
+                <span className="block text-[11px] font-black uppercase tracking-[0.32em] text-stone-500">EDL Surfaces</span>
+              </span>
+            </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
-          <Link href="/products" className="text-[0.78rem] font-extrabold uppercase tracking-[0.16em] text-stone-700 transition hover:text-[#17130f]">
-            Shop
-          </Link>
-
-          <div
-            className="relative"
-            onMouseEnter={() => setCollectionsOpen(true)}
-            onMouseLeave={() => setCollectionsOpen(false)}
-          >
             <button
               type="button"
-              onClick={() => setCollectionsOpen((value) => !value)}
-              className="flex items-center gap-2 text-[0.78rem] font-extrabold uppercase tracking-[0.16em] text-stone-700 transition hover:text-[#17130f]"
-              aria-expanded={collectionsOpen}
+              aria-label="Toggle menu"
+              aria-expanded={isOpen}
+              onClick={() => setIsOpen((value) => !value)}
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-stone-200 bg-white text-xl font-bold text-stone-950 lg:hidden"
             >
-              Collection
-              <span className="text-[0.65rem]">⌄</span>
+              {isOpen ? '×' : '≡'}
             </button>
-
-            <div
-              className={`absolute left-1/2 top-full mt-5 w-[320px] -translate-x-1/2 rounded-[1.5rem] border border-stone-200 bg-white p-4 shadow-2xl transition ${
-                collectionsOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
-              }`}
-            >
-              <p className="px-3 text-xs font-black uppercase tracking-[0.22em] text-[#8a4f2b]">EDL</p>
-              <div className="mt-3 grid gap-1">
-                {collectionLinks.map((link) => (
-                  <Link key={link.href} href={link.href} className="rounded-2xl px-3 py-3 text-sm font-black text-[#17130f] transition hover:bg-[#f6f2ea]">
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
           </div>
 
-          <Link href="/about" className="text-[0.78rem] font-extrabold uppercase tracking-[0.16em] text-stone-700 transition hover:text-[#17130f]">
-            About
-          </Link>
-          <Link href="/contact" className="text-[0.78rem] font-extrabold uppercase tracking-[0.16em] text-stone-700 transition hover:text-[#17130f]">
-            Contact
-          </Link>
-        </nav>
+          <div className="order-3 lg:order-2">
+            <HeaderSearch onSearch={() => setIsOpen(false)} />
+          </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          <form action="/products" className="hidden w-[250px] items-center rounded-full border border-stone-200 bg-white px-4 py-2.5 shadow-sm xl:flex">
-            <input
-              type="search"
-              name="search"
-              placeholder="Search code or design"
-              className="min-w-0 flex-1 bg-transparent text-sm font-medium text-stone-900 outline-none placeholder:text-stone-400"
-            />
-            <button type="submit" className="ml-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#17130f] text-white transition hover:bg-stone-700" aria-label="Search">
-              →
-            </button>
-          </form>
-
-          <Link href="/account" aria-label="Account" title="Account" className="flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 bg-white text-[#17130f] shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-50">
-            <AccountIcon />
-          </Link>
-
-          <button type="button" onClick={openCart} aria-label="Open cart" title="Cart" className="relative flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 bg-white text-[#17130f] shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-50">
-            <CartIcon />
-            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#17130f] px-1 text-[0.65rem] font-black leading-none text-white">
-              {itemCount}
-            </span>
-          </button>
+          <nav className="order-2 hidden items-center justify-end gap-5 text-xs font-black tracking-[0.18em] text-stone-700 lg:order-3 lg:flex">
+            {secondaryNavItems.map((item) => (
+              <Link key={item.href} href={item.href} className="transition hover:text-stone-950">
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         </div>
-      </div>
 
-      <div className="border-t border-stone-200/80 px-5 py-3 md:hidden">
-        <div className="flex gap-2 overflow-x-auto">
-          <Link href="/products" className="shrink-0 rounded-full bg-[#17130f] px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-white">Shop</Link>
-          {collectionLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="shrink-0 rounded-full border border-stone-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#17130f]">
-              {link.label}
+        <div className="hidden gap-2 overflow-x-auto border-t border-stone-100 py-3 lg:flex">
+          {primaryNavItems.map((item, index) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={[
+                'shrink-0 rounded-full border px-5 py-2.5 text-xs font-black uppercase tracking-[0.18em] transition',
+                index === 0
+                  ? 'border-stone-950 bg-stone-950 text-white'
+                  : 'border-stone-200 bg-white text-stone-800 hover:border-stone-950 hover:text-stone-950'
+              ].join(' ')}
+            >
+              {item.label}
             </Link>
           ))}
         </div>
+
+        {isOpen ? (
+          <div className="grid gap-3 border-t border-stone-100 py-4 lg:hidden">
+            <div className="grid grid-cols-2 gap-2">
+              {primaryNavItems.map((item, index) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setIsOpen(false)}
+                  className={[
+                    'rounded-2xl border px-3 py-3 text-center text-[11px] font-black uppercase tracking-[0.12em]',
+                    index === 0 ? 'border-stone-950 bg-stone-950 text-white' : 'border-stone-200 bg-white text-stone-800'
+                  ].join(' ')}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
+            <div className="grid gap-2 rounded-3xl bg-stone-50 p-3">
+              {secondaryNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setIsOpen(false)}
+                  className="rounded-2xl px-4 py-3 text-sm font-bold tracking-[0.12em] text-stone-800 hover:bg-white"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
+            <Link href="https://wa.me/628161345224" className="dark-button w-full" onClick={() => setIsOpen(false)}>
+              Chat with Us
+            </Link>
+          </div>
+        ) : null}
       </div>
     </header>
   );

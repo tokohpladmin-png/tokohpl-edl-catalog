@@ -1,6 +1,5 @@
 import type { Product } from '@/types/product';
 import { getEdlImageUrl, getEdlImageUrlCandidates } from './cloudinary';
-import { findEdlProductDetail } from '@/data/edl-product-details';
 
 type ZohoTokenResponse = {
   access_token?: string;
@@ -10,6 +9,13 @@ type ZohoTokenResponse = {
   error?: string;
   error_description?: string;
   status?: string;
+};
+
+type ZohoCustomField = {
+  label?: string;
+  api_name?: string;
+  value?: unknown;
+  customfield_id?: string;
 };
 
 type ZohoItem = {
@@ -31,6 +37,7 @@ type ZohoItem = {
   available_stock?: number | string;
   stock_on_hand?: number | string;
   actual_available_stock?: number | string;
+  custom_fields?: ZohoCustomField[];
 };
 
 type ZohoItemsResponse = {
@@ -41,8 +48,6 @@ type ZohoItemsResponse = {
 
 let cachedAccessToken: string | null = null;
 let cachedAccessTokenExpiry = 0;
-let cachedProducts: Product[] | null = null;
-let cachedProductsAt = 0;
 
 function env(name: string) {
   return process.env[name]?.trim() || '';
@@ -79,20 +84,43 @@ function normalizeText(value: unknown) {
   return String(value).trim();
 }
 
+function getCustomFieldText(item: ZohoItem) {
+  return (item.custom_fields || [])
+    .map((field) => [field.label, field.api_name, field.value].map(normalizeText).join(' '))
+    .join(' ');
+}
+
+function getFullItemText(item: ZohoItem) {
+  return [
+    item.name,
+    item.item_name,
+    item.sku,
+    item.item_code,
+    item.brand,
+    item.product_type,
+    item.item_type,
+    item.description,
+    getCustomFieldText(item)
+  ]
+    .map(normalizeText)
+    .join(' ');
+}
+
 function getItemCode(item: ZohoItem) {
   const candidates = [
     normalizeText(item.item_code),
     normalizeText(item.sku),
     normalizeText(item.name),
-    normalizeText(item.item_name)
+    normalizeText(item.item_name),
+    normalizeText(item.description)
   ];
 
-  const codePattern = /\b[A-Z]{2,6}\s*-?\s*\d{3,5}[A-Z]{0,4}\b/i;
+  const codePattern = /\b[A-Z]{2,8}\s*[-/]?\s*\d{3,5}[A-Z]{0,5}\b/i;
 
   for (const candidate of candidates) {
     const match = candidate.match(codePattern);
     if (match) {
-      return match[0].replace(/\s*[-]\s*/g, ' ').replace(/\s+/g, ' ').toUpperCase();
+      return match[0].replace(/[-/]/g, ' ').replace(/\s+/g, ' ').toUpperCase();
     }
   }
 
@@ -105,177 +133,182 @@ function normalizeItemName(item: ZohoItem) {
 
 function isActive(item: ZohoItem) {
   if (typeof item.is_active === 'boolean') return item.is_active;
+
   const status = normalizeText(item.status).toLowerCase();
+
   if (!status) return true;
+
   return ['active', 'enabled'].includes(status);
 }
 
 function isEdlItem(item: ZohoItem) {
   const searchTerm = env('ZOHO_EDL_SEARCH_TERM') || 'EDL';
-  const haystack = [
-    item.name,
-    item.item_name,
-    item.sku,
-    item.item_code,
-    item.brand,
-    item.description
-  ]
-    .map(normalizeText)
-    .join(' ')
-    .toLowerCase();
+  const haystack = getFullItemText(item).toLowerCase();
 
   return haystack.includes(searchTerm.toLowerCase());
 }
 
-
-    function isExcludedEdlItem(item: ZohoItem) {
-      const haystack = [
-        item.name,
-        item.item_name,
-        item.sku,
-        item.item_code,
-        item.brand,
-        item.description
-      ]
-        .map(normalizeText)
-        .join(' ')
-        .toLowerCase();
-
-      const exclusionTerms = [
-        'abs edging',
-        'abs edge',
-        'edging',
-        'w23mm',
-        't1.0mm',
-        '23*1',
-        '23 x 1',
-        '23x1'
-      ];
-
-      return exclusionTerms.some((term) => haystack.includes(term));
-    }
-
-    function inferCollectionByCodePrefix(code: string) {
-  const prefix = code.trim().split(/\s+/)[0]?.toUpperCase() || '';
-
-  const collectionByPrefix: Record<string, string> = {
-    DSK: 'Solid',
-    DSI: 'Solid',
-    DSS: 'Solid',
-    DSV: 'Solid',
-    DSO: 'Solid',
-
-    DWC: 'Wood',
-    DWO: 'Wood',
-    DWK: 'Wood',
-    DWM: 'Wood',
-    DWP: 'Wood',
-    DWS: 'Wood',
-    DWT: 'Wood',
-    DWW: 'Wood',
-    DWN: 'Wood',
-    DWF: 'Wood',
-
-    DPA: 'Pattern',
-    DPC: 'Pattern',
-    DPD: 'Pattern',
-    DPG: 'Pattern',
-    DPL: 'Pattern',
-    DPM: 'Pattern',
-    DPN: 'Pattern',
-    DPS: 'Pattern',
-    DPT: 'Pattern',
-    DPW: 'Pattern',
-
-    DMB: 'Marble',
-    DMS: 'Marble',
-    DMR: 'Marble',
-    DST: 'Stone',
-    DCT: 'Stone',
-    DCM: 'Stone',
-
-    DME: 'Metal',
-    DMT: 'Metal',
-    DMM: 'Metal',
-    DMI: 'Metal',
-
-    APTICO: 'Aptico',
-    ATP: 'Aptico',
-    ATS: 'Aptico',
-    CATP: 'Aptico',
-    CATS: 'Aptico'
-  };
-
-  return collectionByPrefix[prefix] || '';
+function matchAny(text: string, keywords: string[]) {
+  return keywords.some((keyword) => text.includes(keyword));
 }
 
-function normalizeEdlCollection(value: string) {
-  const text = value.toLowerCase();
+function inferEdlCollection(item: ZohoItem) {
+  const text = getFullItemText(item).toLowerCase();
 
-  if (!text) return '';
-  if (text.includes('solid')) return 'Solid';
-  if (text.includes('wood')) return 'Wood';
-  if (text.includes('marble')) return 'Marble';
-  if (text.includes('stone')) return 'Stone';
-  if (text.includes('metal') || text.includes('mirror')) return 'Metal';
-  if (text.includes('aptico')) return 'Aptico';
-  if (text.includes('pattern')) return 'Pattern';
+  if (matchAny(text, ['aptico'])) {
+    return 'Aptico';
+  }
 
-  return '';
-}
+  if (
+    matchAny(text, [
+      'marble',
+      'stone',
+      'granite',
+      'slate',
+      'concrete',
+      'cement',
+      'terrazzo',
+      'travertine',
+      'onyx',
+      'limestone',
+      'quartz',
+      'calacatta',
+      'carrara',
+      'statuario',
+      'sandstone'
+    ])
+  ) {
+    return 'Marble | Stone';
+  }
 
-function inferCollection(item: ZohoItem) {
-  const text = normalizeItemName(item).toLowerCase();
+  if (
+    matchAny(text, [
+      'metal',
+      'metallic',
+      'aluminium',
+      'aluminum',
+      'steel',
+      'bronze',
+      'copper',
+      'brass',
+      'titanium',
+      'pattern',
+      'fabric',
+      'textile',
+      'linen',
+      'leather',
+      'weave',
+      'saville',
+      'protak',
+      'microcement'
+    ])
+  ) {
+    return 'Pattern | Metal';
+  }
 
-  if (text.includes('wood') || text.includes('oak') || text.includes('walnut') || text.includes('teak') || text.includes('maple') || text.includes('elm') || text.includes('pine')) {
+  if (
+    matchAny(text, [
+      'wood',
+      'woodgrain',
+      'oak',
+      'walnut',
+      'teak',
+      'maple',
+      'elm',
+      'pine',
+      'ash',
+      'birch',
+      'beech',
+      'nogal',
+      'noce',
+      'cherry',
+      'cedar',
+      'wenge',
+      'larch',
+      'hickory',
+      'zebrano',
+      'ebony',
+      'rosewood',
+      'acacia',
+      'eucalyptus',
+      'timber'
+    ])
+  ) {
     return 'Wood';
   }
 
-  if (text.includes('solid') || text.includes('plain') || text.includes('colour') || text.includes('color')) {
-    return 'Solid';
-  }
-
-  if (text.includes('stone') || text.includes('marble') || text.includes('concrete') || text.includes('metal') || text.includes('mirror') || text.includes('grey')) {
-    return 'Pattern';
-  }
-
-  return 'Pattern';
+  // Treat colour-driven and uncategorised EDL laminates as Solid instead of leaving the collection empty.
+  return 'Solid';
 }
 
 function inferColorFamily(item: ZohoItem) {
-  const text = normalizeItemName(item).toLowerCase();
+  const text = getFullItemText(item).toLowerCase();
 
-  if (text.includes('white')) return 'White';
-  if (text.includes('black')) return 'Black';
-  if (text.includes('grey') || text.includes('gray')) return 'Grey';
-  if (text.includes('brown') || text.includes('walnut') || text.includes('teak')) return 'Brown';
-  if (text.includes('cream') || text.includes('beige')) return 'Neutral';
-  if (text.includes('oak') || text.includes('maple') || text.includes('elm') || text.includes('pine')) return 'Light Wood';
+  if (matchAny(text, ['white', 'snow', 'ivory'])) return 'White';
+  if (matchAny(text, ['black', 'ebony'])) return 'Black';
+  if (matchAny(text, ['grey', 'gray', 'ash', 'slate'])) return 'Grey';
+  if (matchAny(text, ['brown', 'walnut', 'teak', 'noce', 'nogal', 'wenge'])) return 'Brown';
+  if (matchAny(text, ['cream', 'beige', 'sand', 'taupe'])) return 'Neutral';
+  if (matchAny(text, ['oak', 'maple', 'elm', 'pine', 'birch', 'beech'])) return 'Light Wood';
+  if (matchAny(text, ['blue', 'navy'])) return 'Blue';
+  if (matchAny(text, ['green', 'sage', 'olive'])) return 'Green';
+  if (matchAny(text, ['red', 'rose', 'pink'])) return 'Red / Pink';
+  if (matchAny(text, ['yellow', 'gold'])) return 'Yellow / Gold';
 
   return 'Neutral';
 }
 
 function inferFinish(item: ZohoItem) {
-  const text = normalizeItemName(item).toUpperCase();
+  const text = getFullItemText(item).toUpperCase();
   const code = getItemCode(item).toUpperCase();
 
   const combined = `${code} ${text}`;
-  const match = combined.match(/\b(HG|SM|MT|M|G|T|S|D|K|XM|XL|NT|ST|SU|MS|RM)\b/);
 
-  return match?.[1] || 'Surface';
+  const knownFinishes = [
+    'HG',
+    'SM',
+    'MT',
+    'MATT',
+    'MATTE',
+    'GLOSS',
+    'TEXTURE',
+    'TEX',
+    'SUEDE',
+    'STONE',
+    'WOOD',
+    'M',
+    'G',
+    'T',
+    'S',
+    'D',
+    'K',
+    'XM',
+    'XL',
+    'NT',
+    'ST',
+    'SU',
+    'MS',
+    'RM'
+  ];
+
+  for (const finish of knownFinishes) {
+    if (combined.includes(finish)) return finish;
+  }
+
+  return 'Surface';
 }
 
 function inferSize(item: ZohoItem) {
-  const text = normalizeItemName(item).toUpperCase();
+  const text = getFullItemText(item).toUpperCase();
 
-  if (text.includes("4'X10") || text.includes('4X10') || text.includes('4 X 10')) return "4'X10'";
-  if (text.includes("4'X8") || text.includes('4X8') || text.includes('4 X 8')) return "4'X8'";
+  if (text.includes("4'X10") || text.includes('4X10') || text.includes('4 X 10') || text.includes('4FT X 10FT')) return "4'X10'";
+  if (text.includes("4'X8") || text.includes('4X8') || text.includes('4 X 8') || text.includes('4FT X 8FT')) return "4'X8'";
 
   return "4'X8'";
 }
 
 function inferThickness(item: ZohoItem) {
-  const text = normalizeItemName(item).toLowerCase();
+  const text = getFullItemText(item).toLowerCase();
   const match = text.match(/(0\.\d+|\d+(?:\.\d+)?)\s*mm/);
   return match ? `${match[1]}mm` : '0.8mm';
 }
@@ -300,6 +333,7 @@ function slugify(value: string) {
     .toLowerCase()
     .trim()
     .replace(/['"]/g, '')
+    .replace(/&/g, ' and ')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '');
 }
@@ -347,7 +381,7 @@ async function getAccessToken() {
   return cachedAccessToken;
 }
 
-async function fetchItemsPage(page: number, accessToken: string, searchText?: string) {
+async function fetchItemsPage(page: number, accessToken: string) {
   const organizationId = getOrganizationId();
 
   if (!organizationId) {
@@ -359,10 +393,6 @@ async function fetchItemsPage(page: number, accessToken: string, searchText?: st
   url.searchParams.set('page', String(page));
   url.searchParams.set('per_page', '200');
 
-  if (searchText) {
-    url.searchParams.set('search_text', searchText);
-  }
-
   const response = await fetch(url.toString(), {
     cache: 'no-store',
     headers: {
@@ -370,17 +400,10 @@ async function fetchItemsPage(page: number, accessToken: string, searchText?: st
     }
   });
 
-  const raw = await response.text();
-  let data: ZohoItemsResponse;
+  const data = (await response.json()) as ZohoItemsResponse;
 
-  try {
-    data = JSON.parse(raw);
-  } catch {
-    throw new Error(`Zoho Books response was not JSON. HTTP ${response.status}: ${raw.slice(0, 300)}`);
-  }
-
-  if (!response.ok || (data.code !== undefined && data.code !== 0)) {
-    throw new Error(data.message || `Unable to fetch Zoho Books items. HTTP ${response.status}`);
+  if (!response.ok || (data.code && data.code !== 0)) {
+    throw new Error(data.message || 'Unable to fetch Zoho Books items.');
   }
 
   return data.items || [];
@@ -391,102 +414,53 @@ function mapZohoItemToProduct(item: ZohoItem): Product {
   const name = normalizeItemName(item);
   const price = calculateWebsitePrice(item);
   const stockOnHand = getStockOnHand(item);
-  const detail = findEdlProductDetail({
-    code,
-    name,
-    sku: normalizeText(item.sku)
-  });
+  const edlCollection = inferEdlCollection(item);
 
   return {
     slug: slugify(`${code} ${name}`),
     code,
     name,
     brand: 'EDL',
-    design: detail?.designName || name,
-        designName: detail?.designName || name,
-    collection: detail?.collection || inferCollection(item),
-    category: detail?.productType || 'Laminate',
-        productType: detail?.productType || 'HPL',
+    design: name,
+    collection: edlCollection,
+    category: edlCollection,
     finish: inferFinish(item),
     size: inferSize(item),
-        sizeMm: detail?.sizeMm || undefined,
-    thickness: detail?.thickness || inferThickness(item),
-    colorFamily: detail?.colorFamily || inferColorFamily(item),
+    thickness: inferThickness(item),
+    colorFamily: inferColorFamily(item),
     price,
     currency: 'IDR',
     active: isActive(item),
     stockOnHand,
-    description: buildProductDescription(item, detail),
+    description: 'A selected EDL surface material for interior and furniture applications.',
     imageUrl: getEdlImageUrl(code),
     imageUrlCandidates: getEdlImageUrlCandidates(code)
   };
 }
 
-function buildProductDescription(item: ZohoItem, detail: ReturnType<typeof findEdlProductDetail>) {
-  const design = detail?.designName || normalizeItemName(item);
-  const productType = detail?.productType || 'HPL';
-  const size = detail?.sizeMm ? ` in ${detail.sizeMm}` : '';
-  const thickness = detail?.thickness ? ` with ${detail.thickness} thickness` : '';
-  const family = detail?.colorFamily ? ` The design is classified under ${detail.colorFamily}.` : '';
-
-  return `${design} is an EDL ${productType} surface material${size}${thickness} for interior and furniture applications.${family}`;
-}
-
-function uniqueItems(items: ZohoItem[]) {
-  const seen = new Set<string>();
-  const result: ZohoItem[] = [];
-
-  for (const item of items) {
-    const key = item.item_id || item.sku || getItemCode(item) || normalizeItemName(item);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    result.push(item);
-  }
-
-  return result;
-}
-
 export async function fetchZohoEdlProducts(): Promise<Product[]> {
-  const now = Date.now();
-  const cacheTtl = Number(env('ZOHO_PRODUCTS_CACHE_TTL_MS') || 600000);
-
-  if (cachedProducts && now - cachedProductsAt < cacheTtl) {
-    return cachedProducts;
-  }
-
-  const searchTerm = env('ZOHO_EDL_SEARCH_TERM') || 'EDL';
-  const maxPages = Number(env('ZOHO_MAX_PAGES') || 100);
+  const fetchAll = (env('ZOHO_FETCH_ALL_ACTIVE_ITEMS') || 'true').toLowerCase() === 'true';
+  const maxPages = Number(env('ZOHO_MAX_PAGES') || 20);
   const accessToken = await getAccessToken();
+
   const allItems: ZohoItem[] = [];
 
-  // First, search Zoho directly for the EDL term.
-  // This avoids scanning only early pages filled with other brands.
-  for (let page = 1; page <= maxPages; page += 1) {
-    const items = await fetchItemsPage(page, accessToken, searchTerm);
-    if (!items.length) break;
-
-    allItems.push(...items);
-    if (items.length < 200) break;
-  }
-
-  // If the direct search returned nothing, scan all pages as fallback.
-  if (!allItems.length) {
+  if (fetchAll) {
     for (let page = 1; page <= maxPages; page += 1) {
       const items = await fetchItemsPage(page, accessToken);
+
       if (!items.length) break;
 
       allItems.push(...items);
+
       if (items.length < 200) break;
     }
+  } else {
+    const items = await fetchItemsPage(1, accessToken);
+    allItems.push(...items);
   }
 
-  const products = uniqueItems(allItems)
-    .filter(isActive)
-    .filter(isEdlItem)
-    .map(mapZohoItemToProduct);
+  const edlItems = allItems.filter(isActive).filter(isEdlItem);
 
-  cachedProducts = products;
-  cachedProductsAt = now;
-
-  return products;
+  return edlItems.map(mapZohoItemToProduct);
 }

@@ -1,15 +1,19 @@
-# TokoHPL EDL Online Store
+# TokoHPL EDL Catalog
 
-A fresh Shopify-style online store website for TokoHPL / EDL.
+Online catalog website for TokoHPL / EDL.
 
 Domain:
 `tokohpl.com`
 
+Contact:
+`tokohpl.admin@gmail.com`
+`0816 1345 224`
+
 Source of product data:
 Zoho Books items filtered by EDL.
 
-Product images:
-Uses Cloudinary folder `edl-product-images`.
+Zoho environment variable:
+`ZOHO_EDL_SEARCH_TERM=EDL`
 
-V7:
-Rebuilt homepage and layout direction into a modern ecommerce / Shopify-style online store.
+Product images:
+To be provided later. The website supports number-code image matching using Cloudinary folder `edl-product-images`.

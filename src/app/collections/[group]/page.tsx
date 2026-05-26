@@ -1,86 +1,112 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ProductGrid } from '@/components/ProductGrid';
-import {
-  EDL_COLLECTION_GROUPS,
-  getBestSellerProducts,
-  getEdlCollectionGroup,
-  getEdlCollectionProducts,
-  getNewCollectionProducts,
-  getPromoItemProducts
-} from '@/lib/products';
+import { ProductExplorer } from '@/components/ProductExplorer';
+import { CollectionGroup, getProductsByCollectionGroup } from '@/lib/products';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 export const revalidate = 600;
 
-type PageProps = {
-  params: {
-    group: string;
-  };
+const groups: Record<string, { title: string; subtitle: string; description: string }> = {
+  shop: {
+    title: 'Shop',
+    subtitle: 'Browse all EDL products from TokoHPL',
+    description: 'Explore all EDL surfaces available in the TokoHPL online catalogue.'
+  },
+  solid: {
+    title: 'Solid',
+    subtitle: 'Clean solid surfaces for modern interiors',
+    description: 'Browse EDL Solid products from TokoHPL.'
+  },
+  solids: {
+    title: 'Solid',
+    subtitle: 'Clean solid surfaces for modern interiors',
+    description: 'Browse EDL Solid products from TokoHPL.'
+  },
+  wood: {
+    title: 'Wood',
+    subtitle: 'Warm wood-inspired surfaces for furniture and interiors',
+    description: 'Browse EDL Wood products from TokoHPL.'
+  },
+  woods: {
+    title: 'Wood',
+    subtitle: 'Warm wood-inspired surfaces for furniture and interiors',
+    description: 'Browse EDL Wood products from TokoHPL.'
+  },
+  'marble-stone': {
+    title: 'Marble | Stone',
+    subtitle: 'Stone, marble, and mineral-inspired finishes',
+    description: 'Browse EDL Marble and Stone products from TokoHPL.'
+  },
+  'pattern-metal': {
+    title: 'Pattern | Metal',
+    subtitle: 'Decorative patterns, textures, and metallic surfaces',
+    description: 'Browse EDL Pattern and Metal products from TokoHPL.'
+  },
+  patterns: {
+    title: 'Pattern | Metal',
+    subtitle: 'Decorative patterns, textures, and metallic surfaces',
+    description: 'Browse EDL Pattern and Metal products from TokoHPL.'
+  },
+  aptico: {
+    title: 'Aptico',
+    subtitle: 'Premium Aptico surface selections',
+    description: 'Browse EDL Aptico products from TokoHPL.'
+  },
+  'new-collections': {
+    title: 'New Collections',
+    subtitle: 'Fresh EDL designs and latest surface selections',
+    description: 'Browse newly introduced EDL designs from TokoHPL.'
+  },
+  'best-sellers': {
+    title: 'Best Sellers',
+    subtitle: 'Popular EDL designs trusted for interior projects',
+    description: 'Explore frequently selected EDL designs for cabinetry, furniture, wall panels, and commercial interiors.'
+  },
+  'promo-items': {
+    title: 'Promo Items',
+    subtitle: 'Selected EDL items available for promotional focus',
+    description: 'Selected EDL items are now available with special promotional pricing. Grab them fast while stocks are available.'
+  }
 };
 
-export function generateStaticParams() {
-  return [
-    ...EDL_COLLECTION_GROUPS.map((group) => ({ group: group.slug })),
-    { group: 'new-collections' },
-    { group: 'best-sellers' },
-    { group: 'promo-items' }
-  ];
-}
+export function generateMetadata({ params }: { params: { group: string } }): Metadata {
+  const page = groups[params.group];
 
-async function getCollectionData(slug: string) {
-  if (slug === 'new-collections') {
-    return {
-      title: 'New Collections',
-      description: 'Explore the latest EDL surface selections available from TokoHPL.',
-      products: await getNewCollectionProducts()
-    };
-  }
-
-  if (slug === 'best-sellers') {
-    return {
-      title: 'Best Sellers',
-      description: 'Popular EDL surfaces for residential, commercial, and project interiors.',
-      products: await getBestSellerProducts()
-    };
-  }
-
-  if (slug === 'promo-items') {
-    return {
-      title: 'Promo Items',
-      description: 'Selected EDL items are available with special promotional pricing. Grab them fast while stocks are available.',
-      products: await getPromoItemProducts()
-    };
-  }
-
-  const group = getEdlCollectionGroup(slug);
-  if (!group) return null;
+  if (!page) return { title: 'Collection Not Found' };
 
   return {
-    title: group.title,
-    description: `Browse EDL ${group.title} products from TokoHPL.`,
-    products: await getEdlCollectionProducts(slug)
+    title: `${page.title} Collection`,
+    description: page.description
   };
 }
 
-export default async function CollectionPage({ params }: PageProps) {
-  const data = await getCollectionData(params.group);
+export default async function CollectionPage({ params }: { params: { group: string } }) {
+  const page = groups[params.group];
 
-  if (!data) {
-    notFound();
-  }
+  if (!page) notFound();
+
+  const products = await getProductsByCollectionGroup(params.group as CollectionGroup);
+  const filterOptions = {
+    collections: Array.from(new Set(products.map((product) => product.collection).filter(Boolean) as string[])).sort(),
+    categories: Array.from(new Set(products.map((product) => product.category).filter(Boolean) as string[])).sort(),
+    finishes: Array.from(new Set(products.map((product) => product.finish).filter(Boolean) as string[])).sort(),
+    sizes: Array.from(new Set(products.map((product) => product.size).filter(Boolean) as string[])).sort(),
+    colorFamilies: Array.from(new Set(products.map((product) => product.colorFamily).filter(Boolean) as string[])).sort()
+  };
 
   return (
-    <main className="bg-[#f6f2ea]">
-      <section className="mx-auto max-w-7xl px-6 py-12 lg:px-8 lg:py-16">
-        <div className="mb-8 rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-stone-200">
-          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#8a4f2b]">Collection</p>
-          <h1 className="mt-4 text-4xl font-black tracking-[-0.055em] text-[#17130f] sm:text-6xl">{data.title}</h1>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-stone-600 sm:text-base">{data.description}</p>
-        </div>
+    <div className="section-shell py-10 sm:py-14">
+      <div className="mb-8 rounded-[2rem] bg-white p-6 shadow-card sm:p-10">
+        <Link href="/products" className="text-sm font-bold text-stone-500 hover:text-stone-950">← All products</Link>
+        <p className="eyebrow mt-8">Collection</p>
+        <h1 className="mt-3 text-4xl font-black tracking-[-0.045em] text-stone-950 sm:text-6xl">{page.title}</h1>
+        <p className="mt-4 max-w-2xl text-lg font-semibold text-stone-700">{page.subtitle}</p>
+        <p className="mt-3 max-w-3xl text-sm leading-7 text-stone-600 sm:text-base">{page.description}</p>
+      </div>
 
-        <ProductGrid products={data.products} showPromoPricing={params.group === 'promo-items'} />
-      </section>
-    </main>
+      <ProductExplorer products={products} filterOptions={filterOptions} showCollectionTabs={false} showPromoPricing={params.group === 'promo-items'} />
+    </div>
   );
 }

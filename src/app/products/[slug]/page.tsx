@@ -1,4 +1,3 @@
-import { AddToCartButton } from '@/components/AddToCartButton';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -35,10 +34,11 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   const specs = [
     ['Code', product.code],
     ['Brand', product.brand],
-    ['Product Type', product.productType || product.category],
-    ['Design Name', product.designName || product.design],
+    ['Design', product.design],
+    ['Category', product.category],
     ['Collection', product.collection],
-    ['Size (mm)', product.sizeMm],
+    ['Finish', product.finish],
+    ['Size', product.size],
     ['Thickness', product.thickness],
     ['Color Family', product.colorFamily]
   ].filter(([, value]) => Boolean(value));
@@ -67,13 +67,13 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             ) : (
               <p className="text-3xl font-black text-stone-950">{formatIDR(product.price)}</p>
             )}
-              <AddToCartButton product={product} />
+            <p className="mt-2 text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Tax Included</p>
           </div>
 
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <a href={enquiryUrl} target="_blank" rel="noreferrer" className="dark-button">
-              
+              Chat with Us
             </a>
           </div>
 

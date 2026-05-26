@@ -1,5 +1,4 @@
 import type { Product } from '@/types/product';
-import { AddToCartButton } from './AddToCartButton';
 import { ProductCard } from './ProductCard';
 
 export function ProductGrid({ products, showPromoPricing = false }: { products: Product[]; showPromoPricing?: boolean }) {

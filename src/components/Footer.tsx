@@ -1,41 +1,40 @@
 import Link from 'next/link';
 
 export function Footer() {
-  const year = new Date().getFullYear();
-
   return (
-    <footer className="border-t border-stone-200 bg-[#17130f] text-white">
-      <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 lg:grid-cols-[1.2fr_0.8fr_0.8fr] lg:px-8">
+    <footer className="border-t border-stone-200/80 bg-stone-950 text-white">
+      <div className="section-shell grid gap-10 py-12 sm:py-14 md:grid-cols-[1.25fr_0.55fr_0.85fr]">
         <div>
-          <p className="text-3xl font-black tracking-[-0.06em]">TokoHPL</p>
-          <p className="mt-4 max-w-md text-sm leading-7 text-stone-300">
-            A modern online store for EDL decorative surfaces, built for contractors, interior businesses, and project teams.
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-stone-300">TokoHPL</p>
+          <p className="mt-4 max-w-xl text-sm leading-7 text-stone-300">
+            TokoHPL is an authorized dealer of EDL High Pressure Laminates (HPL) in Indonesia. We are committed to delivering a transparent, professional, and dependable purchasing experience for all our customers.
           </p>
         </div>
 
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-stone-400">Shop</p>
-          <div className="mt-4 grid gap-3 text-sm font-semibold text-stone-300">
-            <Link href="/products" className="hover:text-white">All Products</Link>
-            <Link href="/collections/woods" className="hover:text-white">Collections</Link>
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-stone-300">Catalog</p>
+          <div className="mt-4 grid gap-3 text-sm text-stone-400">
+            <Link href="/collections/new-collections" className="hover:text-white">New Collections</Link>
+            <Link href="/collections/best-sellers" className="hover:text-white">Best Sellers</Link>
             <Link href="/collections/promo-items" className="hover:text-white">Promo Items</Link>
-            <Link href="/contact" className="hover:text-white">Contact</Link>
+            <Link href="/collections/woods" className="hover:text-white">Woods</Link>
+            <Link href="/collections/patterns" className="hover:text-white">Patterns</Link>
+            <Link href="/collections/solids" className="hover:text-white">Solids</Link>
           </div>
         </div>
 
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-stone-400">Contact</p>
-          <div className="mt-4 text-sm leading-7 text-stone-300">
-            <p>T. 0816 1345 224</p>
-            <a href="mailto:tokohpl.admin@gmail.com" className="hover:text-white">tokohpl.admin@gmail.com</a>
-            <p>tokohpl.com</p>
-            <p className="mt-3">Mon - Fri 09.00 - 17.00</p>
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-stone-300">Contact</p>
+          <div className="mt-4 grid gap-1 text-sm leading-7 text-stone-400">
+            <p>Phone: 0816 1345 224 / 0812 1001 5224</p>
+            <p>Email: tokohpl.admin@gmail.com</p>
           </div>
         </div>
       </div>
-
-      <div className="border-t border-white/10 px-6 py-5 text-center text-xs font-semibold text-stone-400">
-        Copyright © {year} TokoHPL. All rights reserved.
+      <div className="border-t border-white/10">
+        <div className="section-shell py-5 text-xs font-medium text-stone-500">
+          Copyright © {new Date().getFullYear()} CV. TokoHPL FORMA HUTAMA.
+        </div>
       </div>
     </footer>
   );

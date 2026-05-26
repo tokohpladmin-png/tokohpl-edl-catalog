@@ -2,8 +2,6 @@ import type { Metadata } from 'next';
 import { Manrope } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/Header';
-import { CartProvider } from '@/components/CartProvider';
-import { CartDrawer } from '@/components/CartDrawer';
 import { Footer } from '@/components/Footer';
 
 const manrope = Manrope({
@@ -34,12 +32,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={manrope.variable}>
       <body className={`${manrope.className} min-h-screen font-sans antialiased`}>
-        <CartProvider>
-          <Header />
-          <main>{children}</main>
-          <Footer />
-          <CartDrawer />
-        </CartProvider>
+        <Header />
+        <main>{children}</main>
+        <Footer />
       </body>
     </html>
   );
