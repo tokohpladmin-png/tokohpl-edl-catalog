@@ -1,0 +1,41 @@
+import type { Metadata } from 'next';
+import { Manrope } from 'next/font/google';
+import './globals.css';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
+
+const manrope = Manrope({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-manrope'
+});
+
+export const metadata: Metadata = {
+  title: {
+    default: 'tokohpl | EDL Online Catalog | EDL Indonesia',
+    template: '%s | tokohpl'
+  },
+  description:
+    'Browse EDL HPL products from tokohpl, an authorized dealer in Indonesia. Search product codes, view prices, and enquire by WhatsApp.',
+  metadataBase: new URL('https://tokohpl.com'),
+  openGraph: {
+    title: 'tokohpl | EDL Online Catalog',
+    description: 'Browse EDL HPL products from tokohpl in Indonesia.',
+    url: 'https://tokohpl.com',
+    siteName: 'tokohpl',
+    locale: 'en_ID',
+    type: 'website'
+  }
+};
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="en" className={manrope.variable}>
+      <body className={`${manrope.className} min-h-screen font-sans antialiased`}>
+        <Header />
+        <main>{children}</main>
+        <Footer />
+      </body>
+    </html>
+  );
+}

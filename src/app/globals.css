@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --varindo-ink: #181411;
+  --varindo-muted: #70675f;
+  --varindo-cream: #f8f4ee;
+  --varindo-paper: #fffaf3;
+  --varindo-line: #e8ded2;
+  --varindo-gold: #b88746;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(184, 135, 70, 0.10), transparent 34rem),
+    linear-gradient(180deg, #fffaf3 0%, #f8f4ee 48%, #ffffff 100%);
+  color: var(--varindo-ink);
+}
+
+::selection {
+  background: var(--varindo-ink);
+  color: white;
+}
+
+img {
+  -webkit-user-drag: none;
+}
+
+@layer components {
+  .section-shell {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.22em] text-amber-700;
+  }
+
+  .soft-card {
+    @apply rounded-[1.75rem] border border-stone-200/80 bg-white/85 shadow-card backdrop-blur;
+  }
+
+  .dark-button {
+    @apply inline-flex items-center justify-center rounded-full bg-stone-950 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-800;
+  }
+
+  .light-button {
+    @apply inline-flex items-center justify-center rounded-full border border-stone-300 bg-white px-5 py-3 text-sm font-bold text-stone-950 transition hover:-translate-y-0.5 hover:border-stone-950;
+  }
+}
+
+
+:root {
+  --font-manrope: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+}
