@@ -155,7 +155,76 @@ function isEdlItem(item: ZohoItem) {
       return exclusionTerms.some((term) => haystack.includes(term));
     }
 
-    function inferCollection(item: ZohoItem) {
+    function inferCollectionByCodePrefix(code: string) {
+  const prefix = code.trim().split(/\s+/)[0]?.toUpperCase() || '';
+
+  const collectionByPrefix: Record<string, string> = {
+    DSK: 'Solid',
+    DSI: 'Solid',
+    DSS: 'Solid',
+    DSV: 'Solid',
+    DSO: 'Solid',
+
+    DWC: 'Wood',
+    DWO: 'Wood',
+    DWK: 'Wood',
+    DWM: 'Wood',
+    DWP: 'Wood',
+    DWS: 'Wood',
+    DWT: 'Wood',
+    DWW: 'Wood',
+    DWN: 'Wood',
+    DWF: 'Wood',
+
+    DPA: 'Pattern',
+    DPC: 'Pattern',
+    DPD: 'Pattern',
+    DPG: 'Pattern',
+    DPL: 'Pattern',
+    DPM: 'Pattern',
+    DPN: 'Pattern',
+    DPS: 'Pattern',
+    DPT: 'Pattern',
+    DPW: 'Pattern',
+
+    DMB: 'Marble',
+    DMS: 'Marble',
+    DMR: 'Marble',
+    DST: 'Stone',
+    DCT: 'Stone',
+    DCM: 'Stone',
+
+    DME: 'Metal',
+    DMT: 'Metal',
+    DMM: 'Metal',
+    DMI: 'Metal',
+
+    APTICO: 'Aptico',
+    ATP: 'Aptico',
+    ATS: 'Aptico',
+    CATP: 'Aptico',
+    CATS: 'Aptico'
+  };
+
+  return collectionByPrefix[prefix] || '';
+}
+
+function normalizeEdlCollection(value: string) {
+  const text = value.toLowerCase();
+
+  if (!text) return '';
+  if (text.includes('solid')) return 'Solid';
+  if (text.includes('wood')) return 'Wood';
+  if (text.includes('marble')) return 'Marble';
+  if (text.includes('stone')) return 'Stone';
+  if (text.includes('metal') || text.includes('mirror')) return 'Metal';
+  if (text.includes('aptico')) return 'Aptico';
+  if (text.includes('pattern')) return 'Pattern';
+
+  return '';
+}
+
+function inferCollection(item: ZohoItem) {
   const text = normalizeItemName(item).toLowerCase();
 
   if (text.includes('wood') || text.includes('oak') || text.includes('walnut') || text.includes('teak') || text.includes('maple') || text.includes('elm') || text.includes('pine')) {
@@ -170,7 +239,7 @@ function isEdlItem(item: ZohoItem) {
     return 'Pattern';
   }
 
-  return 'Laminate';
+  return 'Pattern';
 }
 
 function inferColorFamily(item: ZohoItem) {

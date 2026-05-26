@@ -9,12 +9,9 @@ export const revalidate = 600;
 const categories = [
   { title: 'Solid', subtitle: 'Clean colours for modern projects', href: '/collections/solid' },
   { title: 'Wood', subtitle: 'Warm natural surfaces', href: '/collections/wood' },
-  { title: 'Pattern', subtitle: 'Creative textures and decorative looks', href: '/collections/pattern' },
-  { title: 'Marble', subtitle: 'Elegant marble-inspired surfaces', href: '/collections/marble' },
-  { title: 'Stone', subtitle: 'Concrete, slate, and stone looks', href: '/collections/stone' },
-  { title: 'Metal', subtitle: 'Metallic and reflective finishes', href: '/collections/metal' },
-  { title: 'Aptico', subtitle: 'Premium Aptico surfaces', href: '/collections/aptico' },
-  { title: 'Promo Items', subtitle: 'Selected offers while stocks last', href: '/collections/promo-items' }
+  { title: 'Marble | Stone', subtitle: 'Elegant marble, stone, slate, and concrete looks', href: '/collections/marble-stone' },
+  { title: 'Pattern | Metal', subtitle: 'Creative patterns, metallics, and reflective finishes', href: '/collections/pattern-metal' },
+  { title: 'Aptico', subtitle: 'Premium Aptico surfaces', href: '/collections/aptico' }
 ];
 
 const storeBenefits = [

@@ -201,14 +201,19 @@ export async function getProductsByCollectionGroup(group: CollectionGroup) {
   }));
 }
 
+
 export const EDL_COLLECTION_GROUPS = [
-  { slug: 'solid', title: 'Solid', collection: 'Solid' },
-  { slug: 'wood', title: 'Wood', collection: 'Wood' },
-  { slug: 'pattern', title: 'Pattern', collection: 'Pattern' },
-  { slug: 'marble', title: 'Marble', collection: 'Marble' },
-  { slug: 'stone', title: 'Stone', collection: 'Stone' },
-  { slug: 'metal', title: 'Metal', collection: 'Metal' },
-  { slug: 'aptico', title: 'Aptico', collection: 'Aptico' }
+  { slug: 'solid', title: 'Solid', collections: ['Solid'] },
+  { slug: 'wood', title: 'Wood', collections: ['Wood'] },
+  { slug: 'marble-stone', title: 'Marble | Stone', collections: ['Marble', 'Stone'] },
+  { slug: 'pattern-metal', title: 'Pattern | Metal', collections: ['Pattern', 'Metal'] },
+  { slug: 'aptico', title: 'Aptico', collections: ['Aptico'] },
+
+  // Backward-compatible direct routes
+  { slug: 'marble', title: 'Marble', collections: ['Marble'] },
+  { slug: 'stone', title: 'Stone', collections: ['Stone'] },
+  { slug: 'pattern', title: 'Pattern', collections: ['Pattern'] },
+  { slug: 'metal', title: 'Metal', collections: ['Metal'] }
 ];
 
 export function getEdlCollectionGroup(slug: string) {
@@ -220,8 +225,9 @@ export async function getEdlCollectionProducts(slug: string) {
   if (!group) return [];
 
   const products = await getAllProducts();
+  const allowedCollections = group.collections.map((collection) => collection.toLowerCase());
 
   return products.filter((product) =>
-    product.collection?.toLowerCase() === group.collection.toLowerCase()
+    allowedCollections.includes((product.collection || '').toLowerCase())
   );
 }
