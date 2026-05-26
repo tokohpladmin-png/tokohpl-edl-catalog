@@ -60,7 +60,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
               <>
                 <p className="text-sm font-bold text-stone-400 line-through">{formatIDR(product.price)}</p>
                 <p className="text-3xl font-black text-stone-950">{formatIDR(product.promoPrice)}</p>
-                <p className="mt-2 inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-amber-900">
+                <p className="mt-2 inline-flex rounded-none bg-amber-100 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-amber-900">
                   Promo 5% Off
                 </p>
               </>
@@ -71,17 +71,17 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
           </div>
 
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <a href={enquiryUrl} target="_blank" rel="noreferrer" className="dark-button">
-              Chat with Us
-            </a>
+          <div className="mt-8 flex flex-col gap-3 sm:max-w-md">
+            <button type="button" className="dark-button w-full">
+              Add to Cart
+            </button>
           </div>
 
           <div className="mt-10 soft-card p-6">
             <h2 className="text-lg font-black text-stone-950">Product details</h2>
             <dl className="mt-5 grid gap-4 sm:grid-cols-2">
               {specs.map(([label, value]) => (
-                <div key={label} className="rounded-2xl bg-stone-50 p-4">
+                <div key={label} className="rounded-none bg-stone-50 p-4">
                   <dt className="text-xs font-bold uppercase tracking-[0.16em] text-stone-500">{label}</dt>
                   <dd className="mt-1 text-sm font-bold text-stone-950">{value}</dd>
                 </div>
@@ -89,7 +89,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             </dl>
           </div>
 
-          <div className="mt-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-5 text-sm leading-7 text-amber-950">
+          <div className="mt-6 rounded-none border border-amber-200 bg-amber-50 p-5 text-sm leading-7 text-amber-950">
             Note: Actual colours may vary from the colours displayed digitally on your screen. Prior to specification, we recommend to view a physical sample.
           </div>
         </div>

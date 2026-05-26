@@ -29,7 +29,7 @@ export default function RequestSamplePage() {
               'Name or company name',
               'Delivery city in Indonesia'
             ].map((item) => (
-              <div key={item} className="rounded-2xl bg-stone-50 p-4 text-sm font-semibold text-stone-700">
+              <div key={item} className="rounded-none bg-stone-50 p-4 text-sm font-semibold text-stone-700">
                 {item}
               </div>
             ))}

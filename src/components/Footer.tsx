@@ -7,33 +7,33 @@ export function Footer() {
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-stone-300">TokoHPL</p>
           <p className="mt-4 max-w-xl text-sm leading-7 text-stone-300">
-            TokoHPL is an authorized dealer of EDL High Pressure Laminates (HPL) in Indonesia. We are committed to delivering a transparent, professional, and dependable purchasing experience for all our customers.
+            A modern online store for EDL decorative surfaces, built for contractors, interior businesses, and project teams.
           </p>
         </div>
 
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-stone-300">Catalog</p>
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-stone-300">Quick Links</p>
           <div className="mt-4 grid gap-3 text-sm text-stone-400">
-            <Link href="/collections/new-collections" className="hover:text-white">New Collections</Link>
-            <Link href="/collections/best-sellers" className="hover:text-white">Best Sellers</Link>
-            <Link href="/collections/promo-items" className="hover:text-white">Promo Items</Link>
-            <Link href="/collections/woods" className="hover:text-white">Woods</Link>
-            <Link href="/collections/patterns" className="hover:text-white">Patterns</Link>
-            <Link href="/collections/solids" className="hover:text-white">Solids</Link>
+            <Link href="/about" className="hover:text-white">About</Link>
+            <Link href="/products" className="hover:text-white">Collections</Link>
+            <Link href="/contact" className="hover:text-white">Contact</Link>
           </div>
         </div>
 
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-stone-300">Contact</p>
           <div className="mt-4 grid gap-1 text-sm leading-7 text-stone-400">
-            <p>Phone: 0816 1345 224 / 0812 1001 5224</p>
-            <p>Email: tokohpl.admin@gmail.com</p>
+            <p>T. 0816 1345 224</p>
+            <p>
+              <a href="mailto:tokohpl.admin@gmail.com" className="hover:text-white">tokohpl.admin@gmail.com</a>
+            </p>
           </div>
         </div>
       </div>
+
       <div className="border-t border-white/10">
         <div className="section-shell py-5 text-xs font-medium text-stone-500">
-          Copyright © {new Date().getFullYear()} CV. TokoHPL FORMA HUTAMA.
+          Copyright © {new Date().getFullYear()} TokoHPL.
         </div>
       </div>
     </footer>

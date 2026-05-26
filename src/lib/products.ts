@@ -20,51 +20,26 @@ export type CollectionGroup =
 
 const PROMO_MIN_STOCK_ON_HAND = Number(process.env.ZOHO_PROMO_MIN_STOCK_ON_HAND || 10);
 
-export const EDL_COLLECTION_GROUPS = [
-  {
-    slug: 'solid',
-    title: 'Solid',
-    collections: ['Solid']
-  },
-  {
-    slug: 'wood',
-    title: 'Wood',
-    collections: ['Wood']
-  },
-  {
-    slug: 'marble-stone',
-    title: 'Marble | Stone',
-    collections: ['Marble | Stone']
-  },
-  {
-    slug: 'pattern-metal',
-    title: 'Pattern | Metal',
-    collections: ['Pattern | Metal']
-  },
-  {
-    slug: 'aptico',
-    title: 'Aptico',
-    collections: ['Aptico']
-  },
-  {
-    slug: 'new-collections',
-    title: 'New Collections',
-    collections: ['New Collections']
-  },
-  {
-    slug: 'best-sellers',
-    title: 'Best Sellers',
-    collections: ['Best Sellers']
-  },
-  {
-    slug: 'promo-items',
-    title: 'Promo Items',
-    collections: ['Promo Items']
-  }
-] as const;
-
-
 const BEST_SELLER_PRODUCT_CODES: string[] = [];
+
+function isExcludedAccessoryProduct(product: Product) {
+  const text = [product.code, product.name, product.description, product.category, product.collection]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  return (
+    text.includes('abs edging') ||
+    text.includes('edl abs edging') ||
+    text.includes('edge banding') ||
+    text.includes('edgebanding') ||
+    text.includes('edging w') ||
+    text.includes('w23mm') ||
+    text.includes('x t1.0mm') ||
+    text.includes('23*1') ||
+    text.includes('23 x 1')
+  );
+}
 
 function calculatePromoPrice(price?: number | null) {
   if (typeof price !== 'number') return null;
@@ -149,7 +124,7 @@ async function getSourceProducts() {
 
 export async function getAllProducts() {
   const products = await getSourceProducts();
-  return products.filter((product) => product.active).map(enrichProduct);
+  return products.filter((product) => product.active).filter((product) => !isExcludedAccessoryProduct(product)).map(enrichProduct);
 }
 
 export async function getPublicProducts() {
@@ -190,18 +165,21 @@ export function searchProducts(products: Product[], query: string) {
     .map((token) => token.trim())
     .filter(Boolean);
 
-  const normalizedCodeQuery = normalizeCode(query);
+  const compactQuery = normalized.replace(/[^a-z0-9]/g, '');
+  const numericQuery = normalized.replace(/[^0-9]/g, '');
 
   return products.filter((product) => {
-    const haystack = [
+    const searchableFields = [
       product.code,
       normalizeCode(product.code),
+      product.code?.replace(/[^0-9]/g, ''),
       product.name,
+      product.design,
       product.collection,
       product.category,
-      product.design,
       product.finish,
       product.size,
+      product.size?.replace(/[^0-9]/g, ''),
       product.colorFamily,
       product.description
     ]
@@ -209,13 +187,16 @@ export function searchProducts(products: Product[], query: string) {
       .join(' ')
       .toLowerCase();
 
-    if (normalizedCodeQuery && normalizeCode(product.code).includes(normalizedCodeQuery)) {
-      return true;
-    }
+    const compactHaystack = searchableFields.replace(/[^a-z0-9]/g, '');
+    const numericHaystack = searchableFields.replace(/[^0-9]/g, '');
 
-    return queryTokens.every((token) => haystack.includes(token));
+    if (compactQuery && compactHaystack.includes(compactQuery)) return true;
+    if (numericQuery && numericHaystack.includes(numericQuery)) return true;
+
+    return queryTokens.every((token) => searchableFields.includes(token) || compactHaystack.includes(token.replace(/[^a-z0-9]/g, '')));
   });
 }
+
 
 function sortPromoItems(products: Product[]) {
   return [...products].sort((a, b) => {

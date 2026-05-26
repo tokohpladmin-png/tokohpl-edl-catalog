@@ -23,7 +23,7 @@ export function ProductImage({
 
   if (!currentSrc || index >= candidates.length) {
     return (
-      <div className="flex h-full min-h-[220px] w-full items-center justify-center bg-stone-100 p-8 text-center text-sm font-medium text-stone-500">
+      <div data-product-thumbnail="true" className="flex h-full min-h-[220px] w-full items-center justify-center bg-stone-100 p-8 text-center text-sm font-medium text-stone-500">
         Product image will be updated soon
       </div>
     );

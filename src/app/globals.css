@@ -48,15 +48,15 @@ img {
   }
 
   .soft-card {
-    @apply rounded-[1.75rem] border border-stone-200/80 bg-white/85 shadow-card backdrop-blur;
+    @apply rounded-none border border-stone-200/80 bg-white/85 shadow-card backdrop-blur;
   }
 
   .dark-button {
-    @apply inline-flex items-center justify-center rounded-full bg-stone-950 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-800;
+    @apply inline-flex items-center justify-center rounded-none bg-stone-950 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-800;
   }
 
   .light-button {
-    @apply inline-flex items-center justify-center rounded-full border border-stone-300 bg-white px-5 py-3 text-sm font-bold text-stone-950 transition hover:-translate-y-0.5 hover:border-stone-950;
+    @apply inline-flex items-center justify-center rounded-none border border-stone-300 bg-white px-5 py-3 text-sm font-bold text-stone-950 transition hover:-translate-y-0.5 hover:border-stone-950;
   }
 }
 
@@ -67,4 +67,22 @@ img {
 
 body {
   font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+}
+
+
+/* V16 square UI reset */
+*, ::before, ::after {
+  border-radius: 0 !important;
+}
+
+.product-thumbnail,
+[data-product-thumbnail="true"] {
+  aspect-ratio: 1 / 1 !important;
+}
+
+.product-thumbnail img,
+[data-product-thumbnail="true"] img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }

@@ -148,6 +148,22 @@ function isEdlItem(item: ZohoItem) {
   return haystack.includes(searchTerm.toLowerCase());
 }
 
+function isExcludedEdgingItem(item: ZohoItem) {
+  const text = getFullItemText(item).toLowerCase();
+
+  return (
+    text.includes('abs edging') ||
+    text.includes('edl abs edging') ||
+    text.includes('edge banding') ||
+    text.includes('edgebanding') ||
+    text.includes('edging w') ||
+    text.includes('w23mm') ||
+    text.includes('x t1.0mm') ||
+    text.includes('23*1') ||
+    text.includes('23 x 1')
+  );
+}
+
 function matchAny(text: string, keywords: string[]) {
   return keywords.some((keyword) => text.includes(keyword));
 }
@@ -299,13 +315,20 @@ function inferFinish(item: ZohoItem) {
 }
 
 function inferSize(item: ZohoItem) {
-  const text = getFullItemText(item).toUpperCase();
+  const text = getFullItemText(item).toUpperCase().replace(/\s+/g, ' ');
 
-  if (text.includes("4'X10") || text.includes('4X10') || text.includes('4 X 10') || text.includes('4FT X 10FT')) return "4'X10'";
-  if (text.includes("4'X8") || text.includes('4X8') || text.includes('4 X 8') || text.includes('4FT X 8FT')) return "4'X8'";
+  if (text.includes('1220') && text.includes('2440')) return '1220 x 2440mm';
+  if (text.includes('1250') && text.includes('3050')) return '1250 x 3050mm';
+  if (text.includes('1300') && text.includes('2800')) return '1300 x 2800mm';
+  if (text.includes('1300') && text.includes('3050')) return '1300 x 3050mm';
+  if (text.includes('1320') && text.includes('3050')) return '1320 x 3050mm';
 
-  return "4'X8'";
+  if (text.includes("4'X8") || text.includes('4X8') || text.includes('4 X 8') || text.includes('4FT X 8FT')) return '1220 x 2440mm';
+  if (text.includes("4'X10") || text.includes('4X10') || text.includes('4 X 10') || text.includes('4FT X 10FT')) return '1250 x 3050mm';
+
+  return '1220 x 2440mm';
 }
+
 
 function inferThickness(item: ZohoItem) {
   const text = getFullItemText(item).toLowerCase();
@@ -460,7 +483,7 @@ export async function fetchZohoEdlProducts(): Promise<Product[]> {
     allItems.push(...items);
   }
 
-  const edlItems = allItems.filter(isActive).filter(isEdlItem);
+  const edlItems = allItems.filter(isActive).filter(isEdlItem).filter((item) => !isExcludedEdgingItem(item));
 
   return edlItems.map(mapZohoItemToProduct);
 }

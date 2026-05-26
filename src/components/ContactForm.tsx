@@ -51,7 +51,7 @@ export function ContactForm() {
           type="text"
           placeholder="Your name"
           required
-          className="mt-2 w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-stone-950"
+          className="mt-2 w-full rounded-none border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-stone-950"
         />
       </div>
 
@@ -63,7 +63,7 @@ export function ContactForm() {
           type="tel"
           placeholder="Your phone number"
           required
-          className="mt-2 w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-stone-950"
+          className="mt-2 w-full rounded-none border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-stone-950"
         />
       </div>
 
@@ -75,18 +75,18 @@ export function ContactForm() {
           type="email"
           placeholder="your@email.com"
           required
-          className="mt-2 w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-stone-950"
+          className="mt-2 w-full rounded-none border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-stone-950"
         />
       </div>
 
       {submitState === 'success' && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold leading-6 text-emerald-800">
+        <div className="rounded-none border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold leading-6 text-emerald-800">
           We have received your message. Our team will contact you soon. Thank you.
         </div>
       )}
 
       {submitState === 'error' && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold leading-6 text-red-800">
+        <div className="rounded-none border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold leading-6 text-red-800">
           {errorMessage}
         </div>
       )}

@@ -9,6 +9,9 @@ import { ProductGrid } from './ProductGrid';
 
 const PRODUCTS_PER_PAGE = 24;
 
+const EDL_CATEGORY_OPTIONS = ['Solid', 'Wood', 'Marble | Stone', 'Pattern | Metal', 'Aptico'];
+const EDL_SIZE_OPTIONS = ['1220 x 2440mm', '1250 x 3050mm', '1300 x 2800mm', '1300 x 3050mm', '1320 x 3050mm'];
+
 function optionLabel(value: string) {
   return value || 'All';
 }
@@ -50,8 +53,8 @@ export function ProductExplorer({ products, filterOptions, showCollectionTabs = 
     let result = searchProducts(products, query);
 
     if (collection === '__promo-items') result = result.filter((product) => product.isPromoItem);
-    else if (collection) result = result.filter((product) => product.collection === collection);
-    if (category) result = result.filter((product) => product.category === category);
+    else if (collection) result = result.filter((product) => product.collection === collection || product.category === collection);
+    if (category) result = result.filter((product) => product.category === category || product.collection === category);
     if (finish) result = result.filter((product) => product.finish === finish);
     if (size) result = result.filter((product) => product.size === size);
 
@@ -91,7 +94,7 @@ export function ProductExplorer({ products, filterOptions, showCollectionTabs = 
             ['Aptico', '/collections/aptico'],
             ['Promo Items', '/collections/promo-items']
           ].map(([label, href]) => (
-            <Link key={href} href={href} className="shrink-0 rounded-full border border-stone-200 bg-white px-5 py-2.5 text-xs font-black uppercase tracking-[0.14em] text-stone-700 transition hover:border-stone-950 hover:text-stone-950">
+            <Link key={href} href={href} className="shrink-0 rounded-none border border-stone-200 bg-white px-5 py-2.5 text-xs font-black uppercase tracking-[0.14em] text-stone-700 transition hover:border-stone-950 hover:text-stone-950">
               {label}
             </Link>
           ))}
@@ -105,23 +108,23 @@ export function ProductExplorer({ products, filterOptions, showCollectionTabs = 
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search products"
-              className="h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition placeholder:text-stone-400 focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5"
+              placeholder="Search code, number, design name, or size"
+              className="h-12 w-full rounded-none border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition placeholder:text-stone-400 focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5"
             />
           </label>
 
           <label className="block">
             <span className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Collection</span>
-            <select value={collection} onChange={(event) => setCollection(event.target.value)} className="h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
+            <select value={collection} onChange={(event) => setCollection(event.target.value)} className="h-12 w-full rounded-none border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
               <option value="">All collections</option>
               <option value="__promo-items">Promo Items</option>
-              {filterOptions.collections.map((item) => <option key={item} value={item}>{optionLabel(item)}</option>)}
+              {EDL_CATEGORY_OPTIONS.map((item) => <option key={item} value={item}>{optionLabel(item)}</option>)}
             </select>
           </label>
 
           <label className="block">
             <span className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Finish</span>
-            <select value={finish} onChange={(event) => setFinish(event.target.value)} className="h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
+            <select value={finish} onChange={(event) => setFinish(event.target.value)} className="h-12 w-full rounded-none border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
               <option value="">All finishes</option>
               {filterOptions.finishes.map((item) => <option key={item} value={item}>{optionLabel(item)}</option>)}
             </select>
@@ -129,17 +132,17 @@ export function ProductExplorer({ products, filterOptions, showCollectionTabs = 
 
           <label className="block">
             <span className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Category</span>
-            <select value={category} onChange={(event) => setCategory(event.target.value)} className="h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
+            <select value={category} onChange={(event) => setCategory(event.target.value)} className="h-12 w-full rounded-none border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
               <option value="">All categories</option>
-              {filterOptions.categories.map((item) => <option key={item} value={item}>{optionLabel(item)}</option>)}
+              {EDL_CATEGORY_OPTIONS.map((item) => <option key={item} value={item}>{optionLabel(item)}</option>)}
             </select>
           </label>
 
           <label className="block">
             <span className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Size</span>
-            <select value={size} onChange={(event) => setSize(event.target.value)} className="h-12 w-full rounded-2xl border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
+            <select value={size} onChange={(event) => setSize(event.target.value)} className="h-12 w-full rounded-none border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
               <option value="">All sizes</option>
-              {filterOptions.sizes.map((item) => <option key={item} value={item}>{optionLabel(item)}</option>)}
+              {EDL_SIZE_OPTIONS.map((item) => <option key={item} value={item}>{optionLabel(item)}</option>)}
             </select>
           </label>
         </div>
@@ -161,12 +164,7 @@ export function ProductExplorer({ products, filterOptions, showCollectionTabs = 
 
       {filteredProducts.length > PRODUCTS_PER_PAGE && (
         <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-          <button
-            type="button"
-            onClick={() => goToPage(safePage - 1)}
-            disabled={safePage === 1}
-            className="rounded-full border border-stone-200 bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-700 transition hover:border-stone-950 disabled:cursor-not-allowed disabled:opacity-40"
-          >
+          <button type="button" onClick={() => goToPage(safePage - 1)} disabled={safePage === 1} className="rounded-none border border-stone-200 bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-700 transition hover:border-stone-950 disabled:cursor-not-allowed disabled:opacity-40">
             Previous
           </button>
 
@@ -179,27 +177,14 @@ export function ProductExplorer({ products, filterOptions, showCollectionTabs = 
               return (
                 <span key={pageNumber} className="flex items-center gap-2">
                   {showGap && <span className="px-1 text-sm font-bold text-stone-400">…</span>}
-                  <button
-                    type="button"
-                    onClick={() => goToPage(pageNumber)}
-                    className={`h-11 min-w-11 rounded-full border px-4 text-sm font-black transition ${
-                      pageNumber === safePage
-                        ? 'border-stone-950 bg-stone-950 text-white'
-                        : 'border-stone-200 bg-white text-stone-700 hover:border-stone-950'
-                    }`}
-                  >
+                  <button type="button" onClick={() => goToPage(pageNumber)} className={`h-11 min-w-11 rounded-none border px-4 text-sm font-black transition ${pageNumber === safePage ? 'border-stone-950 bg-stone-950 text-white' : 'border-stone-200 bg-white text-stone-700 hover:border-stone-950'}`}>
                     {pageNumber}
                   </button>
                 </span>
               );
             })}
 
-          <button
-            type="button"
-            onClick={() => goToPage(safePage + 1)}
-            disabled={safePage === totalPages}
-            className="rounded-full border border-stone-200 bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-700 transition hover:border-stone-950 disabled:cursor-not-allowed disabled:opacity-40"
-          >
+          <button type="button" onClick={() => goToPage(safePage + 1)} disabled={safePage === totalPages} className="rounded-none border border-stone-200 bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-700 transition hover:border-stone-950 disabled:cursor-not-allowed disabled:opacity-40">
             Next
           </button>
         </div>

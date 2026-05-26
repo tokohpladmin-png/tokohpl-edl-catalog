@@ -18,7 +18,7 @@ export default async function ProductsPage() {
 
   return (
     <div className="section-shell py-10 sm:py-14">
-      <div className="mb-8 rounded-[2rem] bg-stone-950 p-6 text-white shadow-luxury sm:p-10">
+      <div className="mb-8 rounded-none bg-stone-950 p-6 text-white shadow-luxury sm:p-10">
         <p className="eyebrow text-amber-300">EDL Catalog</p>
         <h1 className="mt-3 max-w-3xl text-4xl font-black tracking-[-0.045em] text-white sm:text-6xl">Browse collections</h1>
         <p className="mt-5 max-w-3xl text-sm leading-7 text-stone-300 sm:text-base">

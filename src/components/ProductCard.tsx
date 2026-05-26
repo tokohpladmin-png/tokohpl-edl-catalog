@@ -5,7 +5,7 @@ import { ProductImage } from './ProductImage';
 
 export function ProductCard({ product, showPromoPricing = false }: { product: Product; showPromoPricing?: boolean }) {
   return (
-    <article className="group overflow-hidden rounded-[1.65rem] border border-stone-200/80 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-card">
+    <article className="aspect-square group overflow-hidden rounded-none border border-stone-200/80 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-card">
       <Link href={`/products/${product.slug}`} className="block" aria-label={`View ${product.name}`}>
         <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-stone-100 to-stone-50">
           <ProductImage src={product.imageUrl || ''} imageUrls={product.imageUrlCandidates || []} alt={product.name} />
@@ -23,7 +23,7 @@ export function ProductCard({ product, showPromoPricing = false }: { product: Pr
             <>
               <p className="text-xs font-bold text-stone-400 line-through">{formatIDR(product.price)}</p>
               <p className="text-sm font-extrabold text-stone-950 sm:text-base">{formatIDR(product.promoPrice)}</p>
-              <p className="mt-1 inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-amber-900">
+              <p className="mt-1 inline-flex rounded-none bg-amber-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-amber-900">
                 Promo 5% Off
               </p>
             </>

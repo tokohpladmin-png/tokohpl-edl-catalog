@@ -3,6 +3,7 @@ import { Manrope } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { FloatingWhatsAppButton } from '@/components/FloatingWhatsAppButton';
 
 const manrope = Manrope({
   subsets: ['latin'],
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Header />
         <main>{children}</main>
         <Footer />
+        <FloatingWhatsAppButton />
       </body>
     </html>
   );

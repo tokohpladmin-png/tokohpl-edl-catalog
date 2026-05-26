@@ -98,7 +98,7 @@ export default async function CollectionPage({ params }: { params: { group: stri
 
   return (
     <div className="section-shell py-10 sm:py-14">
-      <div className="mb-8 rounded-[2rem] bg-white p-6 shadow-card sm:p-10">
+      <div className="mb-8 rounded-none bg-white p-6 shadow-card sm:p-10">
         <Link href="/products" className="text-sm font-bold text-stone-500 hover:text-stone-950">← All products</Link>
         <p className="eyebrow mt-8">Collection</p>
         <h1 className="mt-3 text-4xl font-black tracking-[-0.045em] text-stone-950 sm:text-6xl">{page.title}</h1>

@@ -39,7 +39,7 @@ export default function RequestCatalogPage() {
               'Product usage or project type',
               'Preferred designs or product codes, if any'
             ].map((item) => (
-              <div key={item} className="rounded-2xl bg-stone-50 p-4 text-sm font-semibold text-stone-700">
+              <div key={item} className="rounded-none bg-stone-50 p-4 text-sm font-semibold text-stone-700">
                 {item}
               </div>
             ))}
