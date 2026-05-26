@@ -31,21 +31,21 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
 
     setQuantity(finalQuantity);
     setAdded(true);
-
     window.setTimeout(() => setAdded(false), 1800);
   };
 
   return (
-    <div className="mt-8 flex flex-col gap-3 sm:max-w-md">
-      <div className="flex border border-stone-200 bg-white">
+    <div className="mt-8 grid max-w-xl grid-cols-[148px_1fr] gap-3">
+      <div className="flex h-12 border border-stone-200 bg-white">
         <button
           type="button"
           onClick={() => setQuantity((value) => Math.max(1, value - 1))}
-          className="flex h-12 w-12 items-center justify-center border-r border-stone-200 text-lg font-black text-stone-950"
+          className="flex h-12 w-11 items-center justify-center border-r border-stone-200 text-lg font-black text-stone-950"
           aria-label="Decrease quantity"
         >
           −
         </button>
+
         <input
           value={quantity}
           onChange={(event) => {
@@ -56,17 +56,18 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
           inputMode="numeric"
           aria-label="Quantity"
         />
+
         <button
           type="button"
           onClick={() => setQuantity((value) => value + 1)}
-          className="flex h-12 w-12 items-center justify-center border-l border-stone-200 text-lg font-black text-stone-950"
+          className="flex h-12 w-11 items-center justify-center border-l border-stone-200 text-lg font-black text-stone-950"
           aria-label="Increase quantity"
         >
           +
         </button>
       </div>
 
-      <button type="button" onClick={handleAddToCart} className="dark-button w-full">
+      <button type="button" onClick={handleAddToCart} className="dark-button h-12 w-full">
         {added ? 'Added to Cart' : 'Add to Cart'}
       </button>
     </div>

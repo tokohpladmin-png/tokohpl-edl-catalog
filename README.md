@@ -77,3 +77,7 @@ V23:
 
 V24:
 - Fixed CartDrawer itemCount, lastAddedName, and clearLastAdded fields.
+
+
+V25:
+- Fixed product card info visibility, header dropdown, filters, announcement bar, and product page CTA/details.

@@ -9,12 +9,8 @@ import { ProductGrid } from './ProductGrid';
 
 const PRODUCTS_PER_PAGE = 24;
 
-const EDL_CATEGORY_OPTIONS = ['Solid', 'Wood', 'Marble | Stone', 'Pattern | Metal', 'Aptico'];
+const EDL_COLLECTION_OPTIONS = ['Solid', 'Wood', 'Marble | Stone', 'Pattern | Metal', 'Aptico'];
 const EDL_SIZE_OPTIONS = ['1220 x 2440mm', '1250 x 3050mm', '1300 x 2800mm', '1300 x 3050mm', '1320 x 3050mm'];
-
-function optionLabel(value: string) {
-  return value || 'All';
-}
 
 type FilterOptions = {
   collections: string[];
@@ -31,12 +27,10 @@ type ProductExplorerProps = {
   showPromoPricing?: boolean;
 };
 
-export function ProductExplorer({ products, filterOptions, showCollectionTabs = true, showPromoPricing = false }: ProductExplorerProps) {
+export function ProductExplorer({ products, showCollectionTabs = true, showPromoPricing = false }: ProductExplorerProps) {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get('search') || '');
   const [collection, setCollection] = useState('');
-  const [category, setCategory] = useState('');
-  const [finish, setFinish] = useState('');
   const [size, setSize] = useState('');
   const [page, setPage] = useState(1);
 
@@ -47,19 +41,23 @@ export function ProductExplorer({ products, filterOptions, showCollectionTabs = 
 
   useEffect(() => {
     setPage(1);
-  }, [query, collection, category, finish, size]);
+  }, [query, collection, size]);
 
   const filteredProducts = useMemo(() => {
     let result = searchProducts(products, query);
 
-    if (collection === '__promo-items') result = result.filter((product) => product.isPromoItem);
-    else if (collection) result = result.filter((product) => product.collection === collection || product.category === collection);
-    if (category) result = result.filter((product) => product.category === category || product.collection === category);
-    if (finish) result = result.filter((product) => product.finish === finish);
-    if (size) result = result.filter((product) => product.size === size);
+    if (collection === '__promo-items') {
+      result = result.filter((product) => product.isPromoItem);
+    } else if (collection) {
+      result = result.filter((product) => product.collection === collection || product.category === collection);
+    }
+
+    if (size) {
+      result = result.filter((product) => product.size === size);
+    }
 
     return result;
-  }, [products, query, collection, category, finish, size]);
+  }, [products, query, collection, size]);
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
   const safePage = Math.min(page, totalPages);
@@ -70,8 +68,6 @@ export function ProductExplorer({ products, filterOptions, showCollectionTabs = 
   const clearFilters = () => {
     setQuery('');
     setCollection('');
-    setCategory('');
-    setFinish('');
     setSize('');
     setPage(1);
   };
@@ -94,7 +90,7 @@ export function ProductExplorer({ products, filterOptions, showCollectionTabs = 
             ['Aptico', '/collections/aptico'],
             ['Promo Items', '/collections/promo-items']
           ].map(([label, href]) => (
-            <Link key={href} href={href} className="shrink-0 rounded-none border border-stone-200 bg-white px-5 py-2.5 text-xs font-black uppercase tracking-[0.14em] text-stone-700 transition hover:border-stone-950 hover:text-stone-950">
+            <Link key={href} href={href} className="shrink-0 border border-stone-200 bg-white px-5 py-2.5 text-xs font-black uppercase tracking-[0.14em] text-stone-700 transition hover:border-stone-950 hover:text-stone-950">
               {label}
             </Link>
           ))}
@@ -102,47 +98,31 @@ export function ProductExplorer({ products, filterOptions, showCollectionTabs = 
       )}
 
       <div className="soft-card p-4 sm:p-5">
-        <div className="grid gap-4 lg:grid-cols-[1.55fr_1fr_1fr_1fr_1fr]">
+        <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr_1fr]">
           <label className="block">
             <span className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Search</span>
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search code, number, design name, or size"
-              className="h-12 w-full rounded-none border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition placeholder:text-stone-400 focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5"
+              className="h-12 w-full border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition placeholder:text-stone-400 focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5"
             />
           </label>
 
           <label className="block">
             <span className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Collection</span>
-            <select value={collection} onChange={(event) => setCollection(event.target.value)} className="h-12 w-full rounded-none border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
+            <select value={collection} onChange={(event) => setCollection(event.target.value)} className="h-12 w-full border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
               <option value="">All collections</option>
               <option value="__promo-items">Promo Items</option>
-              {EDL_CATEGORY_OPTIONS.map((item) => <option key={item} value={item}>{optionLabel(item)}</option>)}
-            </select>
-          </label>
-
-          <label className="block">
-            <span className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Finish</span>
-            <select value={finish} onChange={(event) => setFinish(event.target.value)} className="h-12 w-full rounded-none border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
-              <option value="">All finishes</option>
-              {filterOptions.finishes.map((item) => <option key={item} value={item}>{optionLabel(item)}</option>)}
-            </select>
-          </label>
-
-          <label className="block">
-            <span className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Category</span>
-            <select value={category} onChange={(event) => setCategory(event.target.value)} className="h-12 w-full rounded-none border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
-              <option value="">All categories</option>
-              {EDL_CATEGORY_OPTIONS.map((item) => <option key={item} value={item}>{optionLabel(item)}</option>)}
+              {EDL_COLLECTION_OPTIONS.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
           </label>
 
           <label className="block">
             <span className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Size</span>
-            <select value={size} onChange={(event) => setSize(event.target.value)} className="h-12 w-full rounded-none border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
+            <select value={size} onChange={(event) => setSize(event.target.value)} className="h-12 w-full border border-stone-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-stone-950 focus:ring-4 focus:ring-stone-950/5">
               <option value="">All sizes</option>
-              {EDL_SIZE_OPTIONS.map((item) => <option key={item} value={item}>{optionLabel(item)}</option>)}
+              {EDL_SIZE_OPTIONS.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
           </label>
         </div>
@@ -164,7 +144,7 @@ export function ProductExplorer({ products, filterOptions, showCollectionTabs = 
 
       {filteredProducts.length > PRODUCTS_PER_PAGE && (
         <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-          <button type="button" onClick={() => goToPage(safePage - 1)} disabled={safePage === 1} className="rounded-none border border-stone-200 bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-700 transition hover:border-stone-950 disabled:cursor-not-allowed disabled:opacity-40">
+          <button type="button" onClick={() => goToPage(safePage - 1)} disabled={safePage === 1} className="border border-stone-200 bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-700 transition hover:border-stone-950 disabled:cursor-not-allowed disabled:opacity-40">
             Previous
           </button>
 
@@ -177,14 +157,14 @@ export function ProductExplorer({ products, filterOptions, showCollectionTabs = 
               return (
                 <span key={pageNumber} className="flex items-center gap-2">
                   {showGap && <span className="px-1 text-sm font-bold text-stone-400">…</span>}
-                  <button type="button" onClick={() => goToPage(pageNumber)} className={`h-11 min-w-11 rounded-none border px-4 text-sm font-black transition ${pageNumber === safePage ? 'border-stone-950 bg-stone-950 text-white' : 'border-stone-200 bg-white text-stone-700 hover:border-stone-950'}`}>
+                  <button type="button" onClick={() => goToPage(pageNumber)} className={`h-11 min-w-11 border px-4 text-sm font-black transition ${pageNumber === safePage ? 'border-stone-950 bg-stone-950 text-white' : 'border-stone-200 bg-white text-stone-700 hover:border-stone-950'}`}>
                     {pageNumber}
                   </button>
                 </span>
               );
             })}
 
-          <button type="button" onClick={() => goToPage(safePage + 1)} disabled={safePage === totalPages} className="rounded-none border border-stone-200 bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-700 transition hover:border-stone-950 disabled:cursor-not-allowed disabled:opacity-40">
+          <button type="button" onClick={() => goToPage(safePage + 1)} disabled={safePage === totalPages} className="border border-stone-200 bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-700 transition hover:border-stone-950 disabled:cursor-not-allowed disabled:opacity-40">
             Next
           </button>
         </div>

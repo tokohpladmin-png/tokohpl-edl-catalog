@@ -36,12 +36,9 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
     ['Code', product.code],
     ['Brand', product.brand],
     ['Design', product.design],
-    ['Category', product.category],
     ['Collection', product.collection],
-    ['Finish', product.finish],
     ['Size', product.size],
-    ['Thickness', product.thickness],
-    ['Color Family', product.colorFamily]
+    ['Thickness', product.thickness]
   ].filter(([, value]) => Boolean(value));
 
   return (
@@ -68,7 +65,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             ) : (
               <p className="text-3xl font-black text-stone-950">{formatIDR(product.price)}</p>
             )}
-            <p className="mt-2 text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Tax Included</p>
+            <p className="mt-2 text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Tax Included | Free Shipping (Java and Bali)</p>
           </div>
 
 
