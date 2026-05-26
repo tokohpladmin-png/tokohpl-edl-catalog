@@ -16,7 +16,7 @@ export default function RequestSamplePage() {
           <p className="eyebrow">Sample Request</p>
           <h1 className="mt-3 text-4xl font-black tracking-[-0.04em] text-stone-950 sm:text-6xl">Request EDL samples</h1>
           <p className="mt-5 text-base leading-8 text-stone-600">
-            Customers may request up to 5 sample pieces per request. Please prepare product codes or design names so tokohpl Team can follow up accurately.
+            Customers may request up to 5 sample pieces per request. Please prepare product codes or design names so TokoHPL Team can follow up accurately.
           </p>
         </div>
 

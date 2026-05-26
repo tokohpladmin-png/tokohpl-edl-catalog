@@ -12,17 +12,17 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   title: {
-    default: 'tokohpl | EDL Online Catalog | EDL Indonesia',
-    template: '%s | tokohpl'
+    default: 'TokoHPL | EDL Online Catalog | EDL Indonesia',
+    template: '%s | TokoHPL'
   },
   description:
-    'Browse EDL HPL products from tokohpl, an authorized dealer in Indonesia. Search product codes, view prices, and enquire by WhatsApp.',
+    'Browse EDL HPL products from TokoHPL, an authorized dealer in Indonesia. Search product codes, view prices, and enquire by WhatsApp.',
   metadataBase: new URL('https://tokohpl.com'),
   openGraph: {
-    title: 'tokohpl | EDL Online Catalog',
-    description: 'Browse EDL HPL products from tokohpl in Indonesia.',
+    title: 'TokoHPL | EDL Online Catalog',
+    description: 'Browse EDL HPL products from TokoHPL in Indonesia.',
     url: 'https://tokohpl.com',
-    siteName: 'tokohpl',
+    siteName: 'TokoHPL',
     locale: 'en_ID',
     type: 'website'
   }

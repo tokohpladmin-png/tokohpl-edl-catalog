@@ -9,7 +9,7 @@ export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: 'EDL Product Catalog',
-  description: 'Search and browse EDL HPL products available through tokohpl in Indonesia.'
+  description: 'Search and browse EDL HPL products available through TokoHPL in Indonesia.'
 };
 
 export default async function ProductsPage() {

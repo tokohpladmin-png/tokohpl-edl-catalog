@@ -1,10 +1,10 @@
 import type { Product } from '@/types/product';
 import { formatIDR } from './utils';
 
-const DEFAULT_WA_NUMBER = '6281288885224';
+const DEFAULT_WA_NUMBER = '628161345224';
 
 export function getWhatsAppNumber() {
-  return process.env.NEXT_PUBLIC_tokohpl_WHATSAPP || DEFAULT_WA_NUMBER;
+  return process.env.NEXT_PUBLIC_TokoHPL_WHATSAPP || DEFAULT_WA_NUMBER;
 }
 
 export function buildWhatsAppUrl(message: string) {
@@ -13,7 +13,7 @@ export function buildWhatsAppUrl(message: string) {
 
 export function buildProductEnquiryMessage(product: Product) {
   const lines = [
-    'Halo tokohpl Team, saya tertarik dengan produk berikut:',
+    'Halo TokoHPL Team, saya tertarik dengan produk berikut:',
     '',
     `Produk: ${product.name}`,
     `Kode: ${product.code}`,
@@ -32,7 +32,7 @@ export function buildProductEnquiryMessage(product: Product) {
 export function buildSampleRequestMessage(product?: Product) {
   if (!product) {
     return [
-      'Halo tokohpl Team, saya ingin request sample EDL.',
+      'Halo TokoHPL Team, saya ingin request sample EDL.',
       '',
       'Kode produk:',
       '1.',
@@ -47,7 +47,7 @@ export function buildSampleRequestMessage(product?: Product) {
   }
 
   return [
-    'Halo tokohpl Team, saya ingin request sample untuk produk berikut:',
+    'Halo TokoHPL Team, saya ingin request sample untuk produk berikut:',
     '',
     `Produk: ${product.name}`,
     `Kode: ${product.code}`,

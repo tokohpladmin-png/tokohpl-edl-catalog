@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
   return {
     title: product.name,
-    description: product.description || `View ${product.name} in the tokohpl EDL catalog.`
+    description: product.description || `View ${product.name} in the TokoHPL EDL catalog.`
   };
 }
 

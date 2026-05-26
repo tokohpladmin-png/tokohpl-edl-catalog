@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function RequestCatalogPage() {
   const message = [
-    'Halo tokohpl Team, saya ingin request katalog EDL.',
+    'Halo TokoHPL Team, saya ingin request katalog EDL.',
     '',
     'Nama / Perusahaan:',
     'Kota:',
@@ -26,7 +26,7 @@ export default function RequestCatalogPage() {
           <p className="eyebrow">Catalog Request</p>
           <h1 className="mt-3 text-4xl font-black tracking-[-0.04em] text-stone-950 sm:text-6xl">Request the EDL catalog</h1>
           <p className="mt-5 text-base leading-8 text-stone-600">
-            Request EDL catalog information from tokohpl through WhatsApp. tokohpl Team will help provide the most relevant product information based on your needs.
+            Request EDL catalog information from TokoHPL through WhatsApp. TokoHPL Team will help provide the most relevant product information based on your needs.
           </p>
         </div>
 
