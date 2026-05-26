@@ -38,8 +38,6 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
     ['Product Type', product.productType || product.category],
     ['Design Name', product.designName || product.design],
     ['Collection', product.collection],
-    ['Finish', product.finish],
-    ['Sheet Size', product.size],
     ['Size (mm)', product.sizeMm],
     ['Thickness', product.thickness],
     ['Color Family', product.colorFamily]
@@ -57,9 +55,6 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
         <div>
           <p className="eyebrow">{product.brand}</p>
           <h1 className="mt-3 text-3xl font-black tracking-[-0.04em] text-stone-950 sm:text-5xl">{product.name}</h1>
-          {product.description && (
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-stone-600 sm:text-base">{product.description}</p>
-          )}
           <div className="mt-5">
             {product.isPromoItem && typeof product.promoPrice === 'number' ? (
               <>
@@ -78,7 +73,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <a href={enquiryUrl} target="_blank" rel="noreferrer" className="dark-button">
-              Chat with Us
+              
             </a>
           </div>
 

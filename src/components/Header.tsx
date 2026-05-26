@@ -5,7 +5,7 @@ import { useCart } from './CartProvider';
 
 const navItems = [
   { label: 'Shop', href: '/products' },
-  { label: 'Collections', href: '/collections/woods' },
+  { label: 'Collections', href: '/collections/wood' },
   { label: 'Promo', href: '/collections/promo-items' },
   { label: 'About', href: '/about' },
   { label: 'Contact', href: '/contact' }

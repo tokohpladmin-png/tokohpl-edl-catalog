@@ -7,9 +7,13 @@ export const fetchCache = 'force-no-store';
 export const revalidate = 600;
 
 const categories = [
-  { title: 'Woodgrain', subtitle: 'Warm natural surfaces', href: '/collections/woods' },
-  { title: 'Patterns', subtitle: 'Stone, metal & texture looks', href: '/collections/patterns' },
-  { title: 'Solids', subtitle: 'Clean colours for modern projects', href: '/collections/solids' },
+  { title: 'Solid', subtitle: 'Clean colours for modern projects', href: '/collections/solid' },
+  { title: 'Wood', subtitle: 'Warm natural surfaces', href: '/collections/wood' },
+  { title: 'Pattern', subtitle: 'Creative textures and decorative looks', href: '/collections/pattern' },
+  { title: 'Marble', subtitle: 'Elegant marble-inspired surfaces', href: '/collections/marble' },
+  { title: 'Stone', subtitle: 'Concrete, slate, and stone looks', href: '/collections/stone' },
+  { title: 'Metal', subtitle: 'Metallic and reflective finishes', href: '/collections/metal' },
+  { title: 'Aptico', subtitle: 'Premium Aptico surfaces', href: '/collections/aptico' },
   { title: 'Promo Items', subtitle: 'Selected offers while stocks last', href: '/collections/promo-items' }
 ];
 
@@ -101,7 +105,7 @@ export default async function HomePage() {
           <Link href="/products" className="text-sm font-black text-[#17130f] underline underline-offset-4">View all products</Link>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {categories.map((category) => (
             <Link key={category.href} href={category.href} className="group rounded-[1.75rem] border border-stone-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
               <div className="h-36 rounded-[1.25rem] bg-gradient-to-br from-[#efe7d8] via-[#c9b79e] to-[#241f1a]" />

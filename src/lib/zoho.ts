@@ -159,7 +159,7 @@ function isEdlItem(item: ZohoItem) {
   const text = normalizeItemName(item).toLowerCase();
 
   if (text.includes('wood') || text.includes('oak') || text.includes('walnut') || text.includes('teak') || text.includes('maple') || text.includes('elm') || text.includes('pine')) {
-    return 'Woodgrain';
+    return 'Wood';
   }
 
   if (text.includes('solid') || text.includes('plain') || text.includes('colour') || text.includes('color')) {

@@ -200,3 +200,28 @@ export async function getProductsByCollectionGroup(group: CollectionGroup) {
     return category === 'solids' || category === 'solids+' || category === 'solid core';
   }));
 }
+
+export const EDL_COLLECTION_GROUPS = [
+  { slug: 'solid', title: 'Solid', collection: 'Solid' },
+  { slug: 'wood', title: 'Wood', collection: 'Wood' },
+  { slug: 'pattern', title: 'Pattern', collection: 'Pattern' },
+  { slug: 'marble', title: 'Marble', collection: 'Marble' },
+  { slug: 'stone', title: 'Stone', collection: 'Stone' },
+  { slug: 'metal', title: 'Metal', collection: 'Metal' },
+  { slug: 'aptico', title: 'Aptico', collection: 'Aptico' }
+];
+
+export function getEdlCollectionGroup(slug: string) {
+  return EDL_COLLECTION_GROUPS.find((group) => group.slug === slug);
+}
+
+export async function getEdlCollectionProducts(slug: string) {
+  const group = getEdlCollectionGroup(slug);
+  if (!group) return [];
+
+  const products = await getAllProducts();
+
+  return products.filter((product) =>
+    product.collection?.toLowerCase() === group.collection.toLowerCase()
+  );
+}
