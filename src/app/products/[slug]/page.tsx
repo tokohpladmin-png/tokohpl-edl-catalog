@@ -1,3 +1,4 @@
+import { AddToCartButton } from '@/components/AddToCartButton';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -67,7 +68,8 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             ) : (
               <p className="text-3xl font-black text-stone-950">{formatIDR(product.price)}</p>
             )}
-            <p className="mt-2 text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Tax Included</p>
+            \1
+              <AddToCartButton product={product} />
           </div>
 
 

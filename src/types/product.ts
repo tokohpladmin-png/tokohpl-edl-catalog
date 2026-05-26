@@ -28,7 +28,7 @@ export type Product = {
   unit?: string;
   currency: 'IDR';
   active: boolean;
-  imageUrl?: string;
+  imageUrl?: string | null;
   imageUrlCandidates?: string[];
   description?: string;
   badges?: ProductBadge[];
