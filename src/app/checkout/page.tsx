@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { formatRupiah, useCart } from '@/components/CartProvider';
 
+export const dynamic = 'force-dynamic';
+
 const bankDetails = {
   bank: 'Bank Central Asia (BCA)',
-  accountName: 'TokoHPL',
+  accountName: 'CV. VARINDO FORMA HUTAMA',
   accountNumber: 'Please confirm with TokoHPL Admin'
 };
 
@@ -14,89 +16,105 @@ export default function CheckoutPage() {
 
   const whatsappText = encodeURIComponent(
     `Halo TokoHPL, saya ingin checkout pesanan berikut:\n\n${items
-      .map((item) => `- ${item.code} | ${item.name} | Qty: ${item.quantity} | ${formatRupiah(item.price)}`)
-      .join('\n')}\n\nSubtotal: ${formatRupiah(subtotal)}\n\nMohon informasi pembayaran dan konfirmasi stok.`
+      .map((item) => {
+        const quantity = item.quantity || 1;
+        return `- ${item.code || ''} ${item.name || ''}\n  Qty: ${quantity}\n  Subtotal: ${formatRupiah((item.price || 0) * quantity)}`;
+      })
+      .join('\n\n')}\n\nTotal: ${formatRupiah(subtotal)}\n\nMohon bantu konfirmasi stok, harga final, dan ongkir. Terima kasih.`
   );
 
-  return (
-    <main className="bg-[#f6f2ea]">
-      <section className="mx-auto max-w-7xl px-6 py-12 lg:px-8 lg:py-20">
-        <div className="grid gap-8 lg:grid-cols-[1fr_0.8fr]">
-          <div className="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-stone-200 sm:p-8">
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-[#8a4f2b]">Checkout</p>
-            <h1 className="mt-4 text-4xl font-black tracking-[-0.055em] text-[#17130f] sm:text-5xl">
-              Manual bank transfer
-            </h1>
-            <p className="mt-4 text-sm leading-7 text-stone-600 sm:text-base">
-              Review your order below. Payment is accepted via manual bank transfer. Please contact TokoHPL after checkout so our team can confirm stock, delivery, and final payment details.
-            </p>
+  if (items.length === 0) {
+    return (
+      <main className="section-shell py-16 sm:py-24">
+        <div className="bg-white p-8 shadow-card sm:p-12">
+          <p className="eyebrow">Checkout</p>
+          <h1 className="mt-3 text-4xl font-black tracking-[-0.045em] text-stone-950 sm:text-5xl">Your cart is empty</h1>
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-stone-600">
+            Add EDL products to your cart before proceeding to checkout.
+          </p>
+          <Link href="/products" className="dark-button mt-8 inline-flex">
+            Browse Products
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
-            <div className="mt-8 space-y-4">
-              {items.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-stone-300 p-8 text-center">
-                  <p className="font-black text-[#17130f]">Your cart is empty.</p>
-                  <Link href="/products" className="mt-5 inline-flex rounded-full bg-[#17130f] px-6 py-3 text-sm font-black text-white">
-                    Shop Products
-                  </Link>
-                </div>
-              ) : (
-                items.map((item) => (
-                  <div key={item.code} className="flex gap-4 rounded-[1.25rem] border border-stone-200 p-4">
-                    <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-stone-100">
-                      {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" /> : null}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-black uppercase tracking-[0.14em] text-stone-400">{item.code}</p>
-                      <p className="mt-1 font-black text-[#17130f]">{item.name}</p>
-                      <p className="mt-2 text-sm font-bold text-stone-600">Qty: {item.quantity}</p>
-                    </div>
-                    <p className="shrink-0 text-sm font-black text-[#17130f]">{formatRupiah((item.price || 0) * item.quantity)}</p>
+  return (
+    <main className="section-shell py-10 sm:py-14">
+      <div className="mb-8 bg-white p-6 shadow-card sm:p-10">
+        <Link href="/products" className="text-sm font-bold text-stone-500 hover:text-stone-950">
+          ← Continue shopping
+        </Link>
+        <p className="eyebrow mt-8">Checkout</p>
+        <h1 className="mt-3 text-4xl font-black tracking-[-0.045em] text-stone-950 sm:text-6xl">Review your order</h1>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-stone-600 sm:text-base">
+          Review your selected items. Final stock availability, pricing, and delivery timing will be confirmed by TokoHPL before payment.
+        </p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="bg-white p-6 shadow-card sm:p-8">
+          <h2 className="text-2xl font-black tracking-[-0.03em] text-stone-950">Order Summary</h2>
+
+          <div className="mt-6 divide-y divide-stone-200 border-y border-stone-200">
+            {items.map((item) => {
+              const quantity = item.quantity || 1;
+              const itemKey = item.slug || item.code || item.name || 'item';
+
+              return (
+                <div key={itemKey} className="flex items-start justify-between gap-4 py-5">
+                  <div>
+                    <p className="text-sm font-black text-stone-950">{item.code}</p>
+                    <p className="mt-1 text-sm leading-6 text-stone-600">{item.name}</p>
+                    <p className="mt-2 text-sm font-bold text-stone-600">Qty: {quantity}</p>
                   </div>
-                ))
-              )}
-            </div>
+                  <p className="shrink-0 text-sm font-black text-[#17130f]">
+                    {formatRupiah((item.price || 0) * quantity)}
+                  </p>
+                </div>
+              );
+            })}
           </div>
 
-          <aside className="h-fit rounded-[2rem] bg-[#17130f] p-6 text-white shadow-sm sm:p-8">
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-[#d8cbb9]">Payment Information</p>
+          <div className="mt-6 flex items-center justify-between text-lg font-black text-stone-950">
+            <span>Total</span>
+            <span>{formatRupiah(subtotal)}</span>
+          </div>
+        </section>
 
-            <div className="mt-6 rounded-[1.5rem] bg-white/10 p-5">
-              <p className="text-sm font-bold text-stone-300">Bank</p>
-              <p className="mt-1 text-xl font-black">{bankDetails.bank}</p>
+        <aside className="bg-[#241f1a] p-6 text-white shadow-card sm:p-8">
+          <p className="eyebrow text-[#d8cbb9]">Next Step</p>
+          <h2 className="mt-3 text-2xl font-black tracking-[-0.03em] text-white">Send your order enquiry</h2>
+          <p className="mt-4 text-sm leading-7 text-stone-300">
+            Click the WhatsApp button below to send your cart to TokoHPL. Our team will confirm stock, final price, and delivery details.
+          </p>
 
-              <p className="mt-5 text-sm font-bold text-stone-300">Account Name</p>
-              <p className="mt-1 text-xl font-black">{bankDetails.accountName}</p>
+          <div className="mt-6 border border-white/10 bg-white/5 p-4 text-sm leading-7 text-stone-300">
+            <p className="font-black text-white">Payment details</p>
+            <p className="mt-2">{bankDetails.bank}</p>
+            <p>{bankDetails.accountName}</p>
+            <p>{bankDetails.accountNumber}</p>
+          </div>
 
-              <p className="mt-5 text-sm font-bold text-stone-300">Account Number</p>
-              <p className="mt-1 text-lg font-black">{bankDetails.accountNumber}</p>
-            </div>
+          <a
+            href={`https://wa.me/628161345224?text=${whatsappText}`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-6 inline-flex w-full items-center justify-center bg-white px-6 py-3 text-sm font-black text-[#241f1a] transition hover:bg-stone-100"
+          >
+            Send via WhatsApp
+          </a>
 
-            <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-5">
-              <p className="font-bold text-stone-300">Subtotal</p>
-              <p className="text-2xl font-black">{formatRupiah(subtotal)}</p>
-            </div>
-
-            <a
-              href={`https://wa.me/628161345224?text=${whatsappText}`}
-              target="_blank"
-              rel="noreferrer"
-              className={`mt-6 flex w-full justify-center rounded-full px-6 py-4 text-sm font-black transition ${
-                items.length ? 'bg-white text-[#17130f] hover:bg-stone-100' : 'pointer-events-none bg-white/20 text-white/40'
-              }`}
-            >
-              Send Order via WhatsApp
-            </a>
-
-            <button
-              type="button"
-              onClick={clearCart}
-              className="mt-3 flex w-full justify-center rounded-full border border-white/15 px-6 py-4 text-sm font-black text-white transition hover:bg-white/10"
-            >
-              Clear Cart
-            </button>
-          </aside>
-        </div>
-      </section>
+          <button
+            type="button"
+            onClick={clearCart}
+            className="mt-3 inline-flex w-full items-center justify-center border border-white/20 px-6 py-3 text-sm font-black text-white transition hover:bg-white/10"
+          >
+            Clear Cart
+          </button>
+        </aside>
+      </div>
     </main>
   );
 }

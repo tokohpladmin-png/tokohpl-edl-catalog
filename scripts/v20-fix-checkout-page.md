@@ -1,0 +1,1 @@
+Fixed checkout page quantity fallback and included checkout page in package.\n

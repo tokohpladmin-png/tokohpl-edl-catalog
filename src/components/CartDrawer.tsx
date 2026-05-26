@@ -1,15 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { formatRupiah, useCart } from './CartProvider';
-
-function CloseIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
-    </svg>
-  );
-}
+import { formatRupiah, useCart } from '@/components/CartProvider';
 
 export function CartDrawer() {
   const {
@@ -24,142 +16,120 @@ export function CartDrawer() {
     clearLastAdded
   } = useCart();
 
+  if (!isCartOpen) return null;
+
   return (
-    <>
-      <div
-        className={`fixed inset-0 z-[90] bg-black/40 backdrop-blur-sm transition-opacity ${
-          isCartOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
-        }`}
-        onClick={() => {
-          closeCart();
-          clearLastAdded();
-        }}
-        aria-hidden="true"
+    <div className="fixed inset-0 z-[9998]">
+      <button
+        type="button"
+        aria-label="Close cart overlay"
+        onClick={closeCart}
+        className="absolute inset-0 bg-black/40"
       />
 
-      <aside
-        className={`fixed right-0 top-0 z-[100] flex h-full w-full max-w-md flex-col bg-[#fbfaf7] shadow-2xl transition-transform duration-300 ${
-          isCartOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
-        aria-label="Shopping cart"
-      >
-        <div className="flex items-center justify-between border-b border-stone-200 px-6 py-5">
+      <aside className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-stone-200 p-5">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#8a4f2b]">Cart</p>
-            <h2 className="mt-1 text-2xl font-black tracking-[-0.04em] text-[#17130f]">
-              {itemCount} {itemCount === 1 ? 'item' : 'items'}
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-stone-500">Cart</p>
+            <h2 className="mt-1 text-2xl font-black tracking-[-0.035em] text-stone-950">
+              {itemCount} item{itemCount === 1 ? '' : 's'}
             </h2>
           </div>
 
           <button
             type="button"
-            onClick={() => {
-              closeCart();
-              clearLastAdded();
-            }}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 bg-white text-[#17130f] transition hover:bg-stone-50"
+            onClick={closeCart}
             aria-label="Close cart"
+            className="flex h-10 w-10 items-center justify-center border border-stone-200 text-xl font-black text-stone-950"
           >
-            <CloseIcon />
+            ×
           </button>
         </div>
 
-        {lastAddedName && (
-          <div className="border-b border-emerald-100 bg-emerald-50 px-6 py-4 text-sm font-bold text-emerald-800">
-            Added to Cart: {lastAddedName}
+        {lastAddedName ? (
+          <div className="border-b border-stone-200 bg-stone-50 p-4 text-sm font-semibold text-stone-700">
+            Added: <span className="font-black text-stone-950">{lastAddedName}</span>
+            <button type="button" onClick={clearLastAdded} className="ml-3 text-xs font-black uppercase tracking-[0.14em] text-stone-500">
+              Dismiss
+            </button>
           </div>
-        )}
+        ) : null}
 
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex-1 overflow-y-auto p-5">
           {items.length === 0 ? (
-            <div className="rounded-[1.5rem] border border-dashed border-stone-300 bg-white p-8 text-center">
-              <p className="text-lg font-black text-[#17130f]">Your cart is empty</p>
-              <p className="mt-3 text-sm leading-6 text-stone-500">
-                Browse EDL products and add items to your cart before checking out.
-              </p>
-              <Link
-                href="/products"
-                onClick={closeCart}
-                className="mt-6 inline-flex rounded-full bg-[#17130f] px-6 py-3 text-sm font-black text-white transition hover:bg-stone-700"
-              >
-                Shop Products
+            <div className="py-12 text-center">
+              <p className="text-lg font-black text-stone-950">Your cart is empty</p>
+              <p className="mt-2 text-sm leading-6 text-stone-600">Browse EDL products and add items to your cart.</p>
+              <Link href="/products" onClick={closeCart} className="dark-button mt-6 inline-flex">
+                Browse Products
               </Link>
             </div>
           ) : (
-            <div className="space-y-4">
-              {items.map((item) => (
-                <div key={item.code} className="rounded-[1.35rem] border border-stone-200 bg-white p-4">
-                  <div className="flex gap-4">
-                    <div className="h-20 w-20 overflow-hidden rounded-2xl bg-stone-100">
+            <div className="grid gap-4">
+              {items.map((item) => {
+                const key = item.slug || item.code || item.name || 'item';
+                const quantity = item.quantity || 1;
+
+                return (
+                  <article key={key} className="border border-stone-200 bg-white p-4">
+                    <div className="flex gap-4">
                       {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
-                      ) : null}
-                    </div>
+                        <img src={item.imageUrl} alt={item.name || item.code || 'Cart item'} className="h-20 w-20 object-cover" />
+                      ) : (
+                        <div className="h-20 w-20 bg-stone-100" />
+                      )}
 
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-black uppercase tracking-[0.14em] text-stone-400">{item.code}</p>
-                      <p className="mt-1 line-clamp-2 text-sm font-black leading-5 text-[#17130f]">{item.name}</p>
-                      <p className="mt-2 text-sm font-black text-[#17130f]">{formatRupiah(item.price)}</p>
-                    </div>
-                  </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-black text-stone-950">{item.code}</p>
+                        <p className="mt-1 line-clamp-2 text-xs leading-5 text-stone-600">{item.name}</p>
+                        <p className="mt-2 text-sm font-black text-stone-950">{formatRupiah(item.price)}</p>
+                      </div>
 
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center rounded-full border border-stone-200 bg-[#fbfaf7]">
                       <button
                         type="button"
-                        onClick={() => updateQuantity(item.code, item.quantity - 1)}
-                        className="flex h-9 w-9 items-center justify-center text-lg font-black text-[#17130f]"
-                        aria-label={`Decrease ${item.name}`}
+                        onClick={() => removeItem(key)}
+                        aria-label="Remove item"
+                        className="h-9 w-9 border border-stone-200 text-base"
                       >
-                        −
-                      </button>
-                      <span className="min-w-8 text-center text-sm font-black text-[#17130f]">{item.quantity}</span>
-                      <button
-                        type="button"
-                        onClick={() => updateQuantity(item.code, item.quantity + 1)}
-                        className="flex h-9 w-9 items-center justify-center text-lg font-black text-[#17130f]"
-                        aria-label={`Increase ${item.name}`}
-                      >
-                        +
+                        🗑
                       </button>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => removeItem(item.code)}
-                      className="text-xs font-black uppercase tracking-[0.16em] text-stone-400 transition hover:text-red-600"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ))}
+                    <div className="mt-4 flex items-center justify-between">
+                      <div className="flex border border-stone-200">
+                        <button type="button" onClick={() => updateQuantity(key, quantity - 1)} className="h-9 w-9 border-r border-stone-200 font-black">
+                          −
+                        </button>
+                        <span className="flex h-9 w-12 items-center justify-center text-sm font-black">{quantity}</span>
+                        <button type="button" onClick={() => updateQuantity(key, quantity + 1)} className="h-9 w-9 border-l border-stone-200 font-black">
+                          +
+                        </button>
+                      </div>
+
+                      <p className="text-sm font-black text-stone-950">{formatRupiah((item.price || 0) * quantity)}</p>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </div>
 
-        <div className="border-t border-stone-200 bg-white px-6 py-5">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-bold text-stone-500">Subtotal</p>
-            <p className="text-xl font-black tracking-[-0.03em] text-[#17130f]">{formatRupiah(subtotal)}</p>
+        <div className="border-t border-stone-200 p-5">
+          <div className="mb-4 flex items-center justify-between text-lg font-black text-stone-950">
+            <span>Subtotal</span>
+            <span>{formatRupiah(subtotal)}</span>
           </div>
-          <p className="mt-2 text-xs leading-5 text-stone-500">
-            Payment is currently accepted via manual bank transfer after checkout.
-          </p>
 
           <Link
             href="/checkout"
             onClick={closeCart}
-            className={`mt-5 flex w-full items-center justify-center rounded-full px-6 py-4 text-sm font-black transition ${
-              items.length
-                ? 'bg-[#17130f] text-white hover:bg-stone-700'
-                : 'pointer-events-none bg-stone-200 text-stone-400'
-            }`}
+            className="dark-button w-full"
           >
             Checkout
           </Link>
         </div>
       </aside>
-    </>
+    </div>
   );
 }

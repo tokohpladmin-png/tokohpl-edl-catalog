@@ -1,54 +1,9 @@
 'use client';
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode
-} from 'react';
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 
-export type CartProductInput = {
-  code: string;
-  name: string;
-  slug: string;
-  price: number | null;
-  imageUrl?: string | null;
-  size?: string | null;
-  finish?: string | null;
-};
-
-export type CartItem = CartProductInput & {
-  quantity: number;
-};
-
-type CartContextValue = {
-  items: CartItem[];
-  isCartOpen: boolean;
-  openCart: () => void;
-  closeCart: () => void;
-  addItem: (product: CartProductInput, quantity?: number) => void;
-  removeItem: (code: string) => void;
-  updateQuantity: (code: string, quantity: number) => void;
-  clearCart: () => void;
-  itemCount: number;
-  subtotal: number;
-  lastAddedName: string | null;
-  clearLastAdded: () => void;
-};
-
-const CartContext = createContext<CartContextValue | null>(null);
-const STORAGE_KEY = 'tokohpl-cart-v1';
-
-function normalizeQuantity(quantity: number) {
-  if (!Number.isFinite(quantity)) return 1;
-  return Math.max(1, Math.min(999, Math.floor(quantity)));
-}
-
-export function formatRupiah(value: number | null | undefined) {
-  if (value === null || value === undefined || !Number.isFinite(value)) {
+export function formatRupiah(value?: number | null) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
     return 'Price on request';
   }
 
@@ -56,122 +11,159 @@ export function formatRupiah(value: number | null | undefined) {
     style: 'currency',
     currency: 'IDR',
     maximumFractionDigits: 0
-  })
-    .format(value)
-    .replace('IDR', 'Rp')
-    .trim();
+  }).format(value);
+}
+
+export type CartItem = {
+  slug?: string;
+  code?: string;
+  name?: string;
+  price?: number | null;
+  quantity: number;
+  imageUrl?: string | null;
+  size?: string | null;
+  finish?: string | null;
+};
+
+type AddableCartItem = Partial<Omit<CartItem, 'quantity'>> & {
+  slug?: string;
+  code?: string;
+  name?: string;
+  quantity?: number;
+};
+
+type CartContextValue = {
+  items: CartItem[];
+  subtotal: number;
+  totalItems: number;
+  itemCount: number;
+  isCartOpen: boolean;
+  lastAddedName: string | null;
+  addItem: (item: AddableCartItem, quantity?: number) => void;
+  removeItem: (codeOrSlug: string) => void;
+  updateQuantity: (codeOrSlug: string, quantity: number) => void;
+  clearCart: () => void;
+  openCart: () => void;
+  closeCart: () => void;
+  toggleCart: () => void;
+  clearLastAdded: () => void;
+};
+
+const CartContext = createContext<CartContextValue | null>(null);
+const STORAGE_KEY = 'tokohpl-cart';
+
+function getItemKey(item: AddableCartItem | CartItem) {
+  return item.slug || item.code || item.name || '';
+}
+
+function normalizeItem(item: AddableCartItem, quantity?: number): CartItem {
+  const finalQuantity = Math.max(1, Number(quantity ?? item.quantity ?? 1) || 1);
+
+  return {
+    slug: item.slug,
+    code: item.code,
+    name: item.name,
+    price: typeof item.price === 'number' ? item.price : item.price ?? null,
+    quantity: finalQuantity,
+    imageUrl: item.imageUrl ?? null,
+    size: item.size ?? null,
+    finish: item.finish ?? null
+  };
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [lastAddedName, setLastAddedName] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as CartItem[];
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+
+      if (stored) {
+        const parsed = JSON.parse(stored) as CartItem[];
+
         if (Array.isArray(parsed)) {
-          setItems(parsed.filter((item) => item && item.code && item.name && item.slug));
+          setItems(parsed.map((item) => normalizeItem(item, item.quantity)));
         }
       }
     } catch {
-      setItems([]);
+      // Ignore invalid localStorage data.
     }
   }, []);
 
   useEffect(() => {
-    if (!mounted) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, [items, mounted]);
-
-  const openCart = useCallback(() => setIsCartOpen(true), []);
-  const closeCart = useCallback(() => setIsCartOpen(false), []);
-  const clearLastAdded = useCallback(() => setLastAddedName(null), []);
-
-  const addItem = useCallback((product: CartProductInput, quantity = 1) => {
-    const qty = normalizeQuantity(quantity);
-
-    setItems((current) => {
-      const existing = current.find((item) => item.code === product.code);
-
-      if (existing) {
-        return current.map((item) =>
-          item.code === product.code
-            ? { ...item, quantity: normalizeQuantity(item.quantity + qty) }
-            : item
-        );
-      }
-
-      return [...current, { ...product, quantity: qty }];
-    });
-
-    setLastAddedName(product.name);
-    setIsCartOpen(true);
-  }, []);
-
-  const removeItem = useCallback((code: string) => {
-    setItems((current) => current.filter((item) => item.code !== code));
-  }, []);
-
-  const updateQuantity = useCallback((code: string, quantity: number) => {
-    if (quantity <= 0) {
-      setItems((current) => current.filter((item) => item.code !== code));
-      return;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      // Ignore localStorage errors.
     }
+  }, [items]);
 
-    setItems((current) =>
-      current.map((item) =>
-        item.code === code ? { ...item, quantity: normalizeQuantity(quantity) } : item
-      )
-    );
-  }, []);
+  const subtotal = items.reduce((total, item) => {
+    const price = typeof item.price === 'number' ? item.price : 0;
+    const quantity = typeof item.quantity === 'number' ? item.quantity : 1;
 
-  const clearCart = useCallback(() => setItems([]), []);
+    return total + price * quantity;
+  }, 0);
 
-  const itemCount = useMemo(
-    () => items.reduce((total, item) => total + item.quantity, 0),
-    [items]
-  );
+  const totalItems = items.reduce((total, item) => total + (item.quantity || 1), 0);
+  const itemCount = totalItems;
 
-  const subtotal = useMemo(
-    () => items.reduce((total, item) => total + (item.price || 0) * item.quantity, 0),
-    [items]
-  );
+  const value = useMemo<CartContextValue>(() => ({
+    items,
+    subtotal,
+    totalItems,
+    itemCount,
+    isCartOpen,
+    lastAddedName,
+    addItem: (item, quantity) => {
+      const normalizedItem = normalizeItem(item, quantity);
+      const key = getItemKey(normalizedItem);
 
-  const value = useMemo(
-    () => ({
-      items,
-      isCartOpen,
-      openCart,
-      closeCart,
-      addItem,
-      removeItem,
-      updateQuantity,
-      clearCart,
-      itemCount,
-      subtotal,
-      lastAddedName,
-      clearLastAdded
-    }),
-    [
-      items,
-      isCartOpen,
-      openCart,
-      closeCart,
-      addItem,
-      removeItem,
-      updateQuantity,
-      clearCart,
-      itemCount,
-      subtotal,
-      lastAddedName,
-      clearLastAdded
-    ]
-  );
+      if (!key) return;
+
+      setItems((current) => {
+        const existing = current.find((entry) => getItemKey(entry) === key);
+
+        if (existing) {
+          return current.map((entry) =>
+            getItemKey(entry) === key
+              ? { ...entry, quantity: (entry.quantity || 1) + normalizedItem.quantity }
+              : entry
+          );
+        }
+
+        return [...current, normalizedItem];
+      });
+
+      setLastAddedName(normalizedItem.name || normalizedItem.code || 'Item');
+      setIsCartOpen(true);
+    },
+    removeItem: (codeOrSlug) => {
+      setItems((current) =>
+        current.filter((item) => item.slug !== codeOrSlug && item.code !== codeOrSlug && item.name !== codeOrSlug)
+      );
+    },
+    updateQuantity: (codeOrSlug, quantity) => {
+      const safeQuantity = Math.max(0, Number(quantity) || 0);
+
+      setItems((current) =>
+        current
+          .map((item) =>
+            item.slug === codeOrSlug || item.code === codeOrSlug || item.name === codeOrSlug
+              ? { ...item, quantity: safeQuantity }
+              : item
+          )
+          .filter((item) => (item.quantity || 0) > 0)
+      );
+    },
+    clearCart: () => setItems([]),
+    openCart: () => setIsCartOpen(true),
+    closeCart: () => setIsCartOpen(false),
+    toggleCart: () => setIsCartOpen((value) => !value),
+    clearLastAdded: () => setLastAddedName(null)
+  }), [items, subtotal, totalItems, itemCount, isCartOpen, lastAddedName]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

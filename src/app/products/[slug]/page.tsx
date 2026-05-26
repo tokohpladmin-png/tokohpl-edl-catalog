@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { AddToCartButton } from '@/components/AddToCartButton';
 import { notFound } from 'next/navigation';
 import { ProductImageZoom } from '@/components/ProductImageZoom';
 import { buildProductEnquiryMessage, buildWhatsAppUrl } from '@/lib/whatsapp';
@@ -71,11 +72,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
           </div>
 
 
-          <div className="mt-8 flex flex-col gap-3 sm:max-w-md">
-            <button type="button" className="dark-button w-full">
-              Add to Cart
-            </button>
-          </div>
+          <AddToCartButton product={product} />
 
           <div className="mt-10 soft-card p-6">
             <h2 className="text-lg font-black text-stone-950">Product details</h2>

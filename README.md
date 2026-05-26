@@ -45,3 +45,35 @@ V15:
 V16:
 - Set product thumbnails to 1:1.
 - Removed rounded corners globally.
+
+
+V17:
+- Fixed checkout/cart provider build error.
+
+
+V18:
+- Fixed missing formatRupiah export for checkout build.
+
+
+V19:
+- Fixed missing cart subtotal for checkout build.
+
+
+V20:
+- Added fixed checkout page with safe quantity fallback.
+
+
+V21:
+- Fixed CartProvider addItem signature for AddToCartButton.
+
+
+V22:
+- Fixed cart nullable imageUrl type and added clean AddToCartButton.
+
+
+V23:
+- Fixed CartDrawer context fields and CartProvider compatibility.
+
+
+V24:
+- Fixed CartDrawer itemCount, lastAddedName, and clearLastAdded fields.
