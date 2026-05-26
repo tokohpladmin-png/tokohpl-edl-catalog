@@ -11,6 +11,8 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       count: products.length,
+      isFallbackSampleOnly: products.length === 1 && products[0]?.code === 'EDL SAMPLE',
+      hint: products.length === 1 && products[0]?.code === 'EDL SAMPLE' ? 'The site is showing fallback data. Open /api/debug-zoho to see the raw Zoho error or filtering issue.' : 'Products loaded.',
       sample: products.slice(0, 10).map((product) => ({
         code: product.code,
         name: product.name,
