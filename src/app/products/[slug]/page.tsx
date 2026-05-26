@@ -35,11 +35,12 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   const specs = [
     ['Code', product.code],
     ['Brand', product.brand],
-    ['Design', product.design],
-    ['Category', product.category],
+    ['Product Type', product.productType || product.category],
+    ['Design Name', product.designName || product.design],
     ['Collection', product.collection],
     ['Finish', product.finish],
-    ['Size', product.size],
+    ['Sheet Size', product.size],
+    ['Size (mm)', product.sizeMm],
     ['Thickness', product.thickness],
     ['Color Family', product.colorFamily]
   ].filter(([, value]) => Boolean(value));
@@ -56,6 +57,9 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
         <div>
           <p className="eyebrow">{product.brand}</p>
           <h1 className="mt-3 text-3xl font-black tracking-[-0.04em] text-stone-950 sm:text-5xl">{product.name}</h1>
+          {product.description && (
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-stone-600 sm:text-base">{product.description}</p>
+          )}
           <div className="mt-5">
             {product.isPromoItem && typeof product.promoPrice === 'number' ? (
               <>
@@ -68,7 +72,6 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             ) : (
               <p className="text-3xl font-black text-stone-950">{formatIDR(product.price)}</p>
             )}
-            \1
               <AddToCartButton product={product} />
           </div>
 

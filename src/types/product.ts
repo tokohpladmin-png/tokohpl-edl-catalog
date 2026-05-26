@@ -9,6 +9,9 @@ export type Product = {
   collection?: string;
   category?: string;
   design?: string;
+  productType?: string;
+  designName?: string;
+  sizeMm?: string;
   finish?: string;
   size?: string;
   thickness?: string;

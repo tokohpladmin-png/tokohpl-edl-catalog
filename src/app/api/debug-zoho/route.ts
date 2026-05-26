@@ -11,22 +11,24 @@ type ZohoTokenResponse = {
   error_description?: string;
 };
 
+type ZohoDebugItem = {
+  item_id?: string;
+  name?: string;
+  item_name?: string;
+  sku?: string;
+  item_code?: string | Record<string, unknown>;
+  rate?: number | string;
+  sales_rate?: number | string;
+  status?: string;
+  is_active?: boolean;
+  brand?: string;
+  description?: string;
+};
+
 type ZohoItemsResponse = {
   code?: number;
   message?: string;
-  items?: Array<{
-    item_id?: string;
-    name?: string;
-    item_name?: string;
-    sku?: string;
-    item_code?: string | Record<string, unknown>;
-    rate?: number | string;
-    sales_rate?: number | string;
-    status?: string;
-    is_active?: boolean;
-    brand?: string;
-    description?: string;
-  }>;
+  items?: ZohoDebugItem[];
 };
 
 function env(name: string) {
@@ -45,6 +47,39 @@ function normalizeText(value: unknown) {
   if (typeof value === 'number') return String(value);
   if (typeof value === 'object') return Object.values(value as Record<string, unknown>).join(' ').trim();
   return String(value).trim();
+}
+
+function itemSummary(item: ZohoDebugItem) {
+  return {
+    name: item.name || item.item_name,
+    sku: item.sku,
+    item_code: normalizeText(item.item_code),
+    brand: item.brand,
+    rate: item.rate,
+    sales_rate: item.sales_rate,
+    status: item.status,
+    is_active: item.is_active
+  };
+}
+
+function isExcludedEdlDebugItem(item: ZohoDebugItem) {
+  const haystack = [item.name, item.item_name, item.sku, item.item_code, item.brand, item.description]
+    .map(normalizeText)
+    .join(' ')
+    .toLowerCase();
+
+  const exclusionTerms = [
+    'abs edging',
+    'abs edge',
+    'edging',
+    'w23mm',
+    't1.0mm',
+    '23*1',
+    '23 x 1',
+    '23x1'
+  ];
+
+  return exclusionTerms.some((term) => haystack.includes(term));
 }
 
 async function getAccessToken() {
@@ -67,7 +102,9 @@ async function getAccessToken() {
   const response = await fetch(`${accountsBaseUrl}/oauth/v2/token`, {
     method: 'POST',
     cache: 'no-store',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
     body: params.toString()
   });
 
@@ -115,11 +152,13 @@ export async function GET() {
     url.searchParams.set('organization_id', organizationId);
     url.searchParams.set('page', '1');
     url.searchParams.set('per_page', '200');
-        url.searchParams.set('search_text', searchTerm);
+    url.searchParams.set('search_text', searchTerm);
 
     const response = await fetch(url.toString(), {
       cache: 'no-store',
-      headers: { Authorization: `Zoho-oauthtoken ${accessToken}` }
+      headers: {
+        Authorization: `Zoho-oauthtoken ${accessToken}`
+      }
     });
 
     const raw = await response.text();
@@ -136,6 +175,7 @@ export async function GET() {
     }
 
     const items = data.items || [];
+
     const matchingItems = items.filter((item) => {
       const haystack = [item.name, item.item_name, item.sku, item.item_code, item.brand, item.description]
         .map(normalizeText)
@@ -145,32 +185,20 @@ export async function GET() {
       return haystack.includes(searchTerm.toLowerCase());
     });
 
+    const excludedAbsEdgingItems = matchingItems.filter(isExcludedEdlDebugItem);
+    const finalMatchingItems = matchingItems.filter((item) => !isExcludedEdlDebugItem(item));
+
     return NextResponse.json({
       success: true,
       envCheck,
       rawFirstSearchPageCount: items.length,
       matchingCountFirstSearchPage: matchingItems.length,
+      excludedAbsEdgingCount: excludedAbsEdgingItems.length,
+      finalMatchingCountFirstSearchPage: finalMatchingItems.length,
       searchTerm,
-      firstSearchPageSample: items.slice(0, 10).map((item) => ({
-        name: item.name || item.item_name,
-        sku: item.sku,
-        item_code: normalizeText(item.item_code),
-        brand: item.brand,
-        rate: item.rate,
-        sales_rate: item.sales_rate,
-        status: item.status,
-        is_active: item.is_active
-      })),
-      matchingSample: matchingItems.slice(0, 10).map((item) => ({
-        name: item.name || item.item_name,
-        sku: item.sku,
-        item_code: normalizeText(item.item_code),
-        brand: item.brand,
-        rate: item.rate,
-        sales_rate: item.sales_rate,
-        status: item.status,
-        is_active: item.is_active
-      }))
+      firstSearchPageSample: items.slice(0, 10).map(itemSummary),
+      excludedAbsEdgingSample: excludedAbsEdgingItems.slice(0, 10).map(itemSummary),
+      matchingSample: finalMatchingItems.slice(0, 10).map(itemSummary)
     });
   } catch (error) {
     return NextResponse.json(

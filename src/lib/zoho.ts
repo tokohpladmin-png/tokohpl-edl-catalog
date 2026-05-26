@@ -1,5 +1,6 @@
 import type { Product } from '@/types/product';
 import { getEdlImageUrl, getEdlImageUrlCandidates } from './cloudinary';
+import { findEdlProductDetail } from '@/data/edl-product-details';
 
 type ZohoTokenResponse = {
   access_token?: string;
@@ -126,7 +127,35 @@ function isEdlItem(item: ZohoItem) {
   return haystack.includes(searchTerm.toLowerCase());
 }
 
-function inferCollection(item: ZohoItem) {
+
+    function isExcludedEdlItem(item: ZohoItem) {
+      const haystack = [
+        item.name,
+        item.item_name,
+        item.sku,
+        item.item_code,
+        item.brand,
+        item.description
+      ]
+        .map(normalizeText)
+        .join(' ')
+        .toLowerCase();
+
+      const exclusionTerms = [
+        'abs edging',
+        'abs edge',
+        'edging',
+        'w23mm',
+        't1.0mm',
+        '23*1',
+        '23 x 1',
+        '23x1'
+      ];
+
+      return exclusionTerms.some((term) => haystack.includes(term));
+    }
+
+    function inferCollection(item: ZohoItem) {
   const text = normalizeItemName(item).toLowerCase();
 
   if (text.includes('wood') || text.includes('oak') || text.includes('walnut') || text.includes('teak') || text.includes('maple') || text.includes('elm') || text.includes('pine')) {
@@ -293,27 +322,45 @@ function mapZohoItemToProduct(item: ZohoItem): Product {
   const name = normalizeItemName(item);
   const price = calculateWebsitePrice(item);
   const stockOnHand = getStockOnHand(item);
+  const detail = findEdlProductDetail({
+    code,
+    name,
+    sku: normalizeText(item.sku)
+  });
 
   return {
     slug: slugify(`${code} ${name}`),
     code,
     name,
     brand: 'EDL',
-    design: name,
-    collection: inferCollection(item),
-    category: 'Laminate',
+    design: detail?.designName || name,
+        designName: detail?.designName || name,
+    collection: detail?.collection || inferCollection(item),
+    category: detail?.productType || 'Laminate',
+        productType: detail?.productType || 'HPL',
     finish: inferFinish(item),
     size: inferSize(item),
-    thickness: inferThickness(item),
-    colorFamily: inferColorFamily(item),
+        sizeMm: detail?.sizeMm || undefined,
+    thickness: detail?.thickness || inferThickness(item),
+    colorFamily: detail?.colorFamily || inferColorFamily(item),
     price,
     currency: 'IDR',
     active: isActive(item),
     stockOnHand,
-    description: 'A selected EDL surface material for interior and furniture applications.',
+    description: buildProductDescription(item, detail),
     imageUrl: getEdlImageUrl(code),
     imageUrlCandidates: getEdlImageUrlCandidates(code)
   };
+}
+
+function buildProductDescription(item: ZohoItem, detail: ReturnType<typeof findEdlProductDetail>) {
+  const design = detail?.designName || normalizeItemName(item);
+  const productType = detail?.productType || 'HPL';
+  const size = detail?.sizeMm ? ` in ${detail.sizeMm}` : '';
+  const thickness = detail?.thickness ? ` with ${detail.thickness} thickness` : '';
+  const family = detail?.colorFamily ? ` The design is classified under ${detail.colorFamily}.` : '';
+
+  return `${design} is an EDL ${productType} surface material${size}${thickness} for interior and furniture applications.${family}`;
 }
 
 function uniqueItems(items: ZohoItem[]) {
