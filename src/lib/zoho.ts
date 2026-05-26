@@ -40,6 +40,8 @@ type ZohoItemsResponse = {
 
 let cachedAccessToken: string | null = null;
 let cachedAccessTokenExpiry = 0;
+let cachedProducts: Product[] | null = null;
+let cachedProductsAt = 0;
 
 function env(name: string) {
   return process.env[name]?.trim() || '';
@@ -84,12 +86,12 @@ function getItemCode(item: ZohoItem) {
     normalizeText(item.item_name)
   ];
 
-  const codePattern = /\b[A-Z]{2,6}\s*\d{3,5}[A-Z]{0,4}\b/i;
+  const codePattern = /\b[A-Z]{2,6}\s*-?\s*\d{3,5}[A-Z]{0,4}\b/i;
 
   for (const candidate of candidates) {
     const match = candidate.match(codePattern);
     if (match) {
-      return match[0].replace(/\s+/g, ' ').toUpperCase();
+      return match[0].replace(/\s*[-]\s*/g, ' ').replace(/\s+/g, ' ').toUpperCase();
     }
   }
 
@@ -127,7 +129,7 @@ function isEdlItem(item: ZohoItem) {
 function inferCollection(item: ZohoItem) {
   const text = normalizeItemName(item).toLowerCase();
 
-  if (text.includes('wood') || text.includes('oak') || text.includes('walnut') || text.includes('teak') || text.includes('maple') || text.includes('elm')) {
+  if (text.includes('wood') || text.includes('oak') || text.includes('walnut') || text.includes('teak') || text.includes('maple') || text.includes('elm') || text.includes('pine')) {
     return 'Woodgrain';
   }
 
@@ -135,7 +137,7 @@ function inferCollection(item: ZohoItem) {
     return 'Solid';
   }
 
-  if (text.includes('stone') || text.includes('marble') || text.includes('concrete') || text.includes('metal')) {
+  if (text.includes('stone') || text.includes('marble') || text.includes('concrete') || text.includes('metal') || text.includes('mirror') || text.includes('grey')) {
     return 'Pattern';
   }
 
@@ -150,7 +152,7 @@ function inferColorFamily(item: ZohoItem) {
   if (text.includes('grey') || text.includes('gray')) return 'Grey';
   if (text.includes('brown') || text.includes('walnut') || text.includes('teak')) return 'Brown';
   if (text.includes('cream') || text.includes('beige')) return 'Neutral';
-  if (text.includes('oak') || text.includes('maple') || text.includes('elm')) return 'Light Wood';
+  if (text.includes('oak') || text.includes('maple') || text.includes('elm') || text.includes('pine')) return 'Light Wood';
 
   return 'Neutral';
 }
@@ -184,7 +186,6 @@ function calculateWebsitePrice(item: ZohoItem) {
   const rawPrice = toNumber(item.sales_rate ?? item.rate);
   if (rawPrice === null) return null;
 
-  // Zoho prices are assumed before PPN. Website shows tax-included price.
   return Math.round(rawPrice * 1.11);
 }
 
@@ -248,7 +249,7 @@ async function getAccessToken() {
   return cachedAccessToken;
 }
 
-async function fetchItemsPage(page: number, accessToken: string) {
+async function fetchItemsPage(page: number, accessToken: string, searchText?: string) {
   const organizationId = getOrganizationId();
 
   if (!organizationId) {
@@ -260,6 +261,10 @@ async function fetchItemsPage(page: number, accessToken: string) {
   url.searchParams.set('page', String(page));
   url.searchParams.set('per_page', '200');
 
+  if (searchText) {
+    url.searchParams.set('search_text', searchText);
+  }
+
   const response = await fetch(url.toString(), {
     cache: 'no-store',
     headers: {
@@ -267,10 +272,17 @@ async function fetchItemsPage(page: number, accessToken: string) {
     }
   });
 
-  const data = (await response.json()) as ZohoItemsResponse;
+  const raw = await response.text();
+  let data: ZohoItemsResponse;
 
-  if (!response.ok || data.code && data.code !== 0) {
-    throw new Error(data.message || 'Unable to fetch Zoho Books items.');
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    throw new Error(`Zoho Books response was not JSON. HTTP ${response.status}: ${raw.slice(0, 300)}`);
+  }
+
+  if (!response.ok || (data.code !== undefined && data.code !== 0)) {
+    throw new Error(data.message || `Unable to fetch Zoho Books items. HTTP ${response.status}`);
   }
 
   return data.items || [];
@@ -304,30 +316,61 @@ function mapZohoItemToProduct(item: ZohoItem): Product {
   };
 }
 
-export async function fetchZohoEdlProducts(): Promise<Product[]> {
-  const fetchAll = (env('ZOHO_FETCH_ALL_ACTIVE_ITEMS') || 'true').toLowerCase() === 'true';
-  const maxPages = Number(env('ZOHO_MAX_PAGES') || 20);
-  const accessToken = await getAccessToken();
+function uniqueItems(items: ZohoItem[]) {
+  const seen = new Set<string>();
+  const result: ZohoItem[] = [];
 
+  for (const item of items) {
+    const key = item.item_id || item.sku || getItemCode(item) || normalizeItemName(item);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(item);
+  }
+
+  return result;
+}
+
+export async function fetchZohoEdlProducts(): Promise<Product[]> {
+  const now = Date.now();
+  const cacheTtl = Number(env('ZOHO_PRODUCTS_CACHE_TTL_MS') || 600000);
+
+  if (cachedProducts && now - cachedProductsAt < cacheTtl) {
+    return cachedProducts;
+  }
+
+  const searchTerm = env('ZOHO_EDL_SEARCH_TERM') || 'EDL';
+  const maxPages = Number(env('ZOHO_MAX_PAGES') || 100);
+  const accessToken = await getAccessToken();
   const allItems: ZohoItem[] = [];
 
-  if (fetchAll) {
+  // First, search Zoho directly for the EDL term.
+  // This avoids scanning only early pages filled with other brands.
+  for (let page = 1; page <= maxPages; page += 1) {
+    const items = await fetchItemsPage(page, accessToken, searchTerm);
+    if (!items.length) break;
+
+    allItems.push(...items);
+    if (items.length < 200) break;
+  }
+
+  // If the direct search returned nothing, scan all pages as fallback.
+  if (!allItems.length) {
     for (let page = 1; page <= maxPages; page += 1) {
       const items = await fetchItemsPage(page, accessToken);
-
       if (!items.length) break;
 
       allItems.push(...items);
-
       if (items.length < 200) break;
     }
-  } else {
-    const items = await fetchItemsPage(1, accessToken);
-    allItems.push(...items);
   }
 
-  return allItems
+  const products = uniqueItems(allItems)
     .filter(isActive)
     .filter(isEdlItem)
     .map(mapZohoItemToProduct);
+
+  cachedProducts = products;
+  cachedProductsAt = now;
+
+  return products;
 }

@@ -115,6 +115,7 @@ export async function GET() {
     url.searchParams.set('organization_id', organizationId);
     url.searchParams.set('page', '1');
     url.searchParams.set('per_page', '200');
+        url.searchParams.set('search_text', searchTerm);
 
     const response = await fetch(url.toString(), {
       cache: 'no-store',
@@ -147,10 +148,10 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       envCheck,
-      rawFirstPageCount: items.length,
-      matchingCountFirstPage: matchingItems.length,
+      rawFirstSearchPageCount: items.length,
+      matchingCountFirstSearchPage: matchingItems.length,
       searchTerm,
-      firstPageSample: items.slice(0, 10).map((item) => ({
+      firstSearchPageSample: items.slice(0, 10).map((item) => ({
         name: item.name || item.item_name,
         sku: item.sku,
         item_code: normalizeText(item.item_code),
